@@ -1,0 +1,7 @@
+plantops:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('PLANTOPS_DB', 'data/plantops.duckdb') }}"
+      threads: 1

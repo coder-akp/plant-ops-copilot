@@ -1,0 +1,122 @@
+{
+ "meta": {
+  "scenario": "healthy",
+  "provider": "gemini",
+  "model": "gemini-3.5-flash-lite",
+  "recorded_at": "2026-11-10",
+  "usage": {
+   "prompt_tokens": 2977,
+   "output_tokens": 229,
+   "total_tokens": 3206,
+   "llm_calls": 4,
+   "est_cost_usd": 0.0,
+   "by_agent": {
+    "detection_agent": {
+     "prompt_tokens": 1273,
+     "output_tokens": 75,
+     "llm_calls": 2
+    },
+    "diagnosis_agent": {
+     "prompt_tokens": 916,
+     "output_tokens": 4,
+     "llm_calls": 1
+    },
+    "report_agent": {
+     "prompt_tokens": 788,
+     "output_tokens": 150,
+     "llm_calls": 1
+    }
+   }
+  }
+ },
+ "events": [
+  {
+   "type": "run_start",
+   "run_id": "adebdd30bde3",
+   "scenario": "healthy",
+   "provider": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "t": 0.0
+  },
+  {
+   "type": "agent_start",
+   "agent": "detection_agent",
+   "label": "Detection agent",
+   "t": 1.92
+  },
+  {
+   "type": "tool_call",
+   "agent": "detection_agent",
+   "name": "scan_line",
+   "args": {},
+   "t": 1.92
+  },
+  {
+   "type": "tool_result",
+   "agent": "detection_agent",
+   "name": "scan_line",
+   "preview": "{\"window\": {\"start\": \"2026-03-02T06:00:00\", \"end\": \"2026-03-02T11:59:50\", \"baseline_until\": \"07:29\"}, \"method\": \"robust z-score vs first-quarter baseline (10 min rolling median), alarm limits, flatline/dropout checks, IsolationForest per machine\", \"findings\": [], \"machines_without_findings\": [\"CAPPER-01\", \"FILLER-01\", \"LABELER-01\", \"PACKER-01\"]}",
+   "t": 2.71
+  },
+  {
+   "type": "agent_message",
+   "agent": "detection_agent",
+   "text": "The line looks healthy and no anomalies were detected. All machines (FILLER-01, CAPPER-01, LABELER-01, PACKER-01) operated within normal parameters during the shift scan, with no alert limit breaches, trips, baseline drifts, stuck sensors, or signal dropouts.",
+   "t": 3.88
+  },
+  {
+   "type": "agent_start",
+   "agent": "diagnosis_agent",
+   "label": "Diagnosis agent",
+   "t": 10.71
+  },
+  {
+   "type": "agent_message",
+   "agent": "diagnosis_agent",
+   "text": "No diagnosis needed.",
+   "t": 10.71
+  },
+  {
+   "type": "agent_start",
+   "agent": "report_agent",
+   "label": "Report agent",
+   "t": 12.77
+  },
+  {
+   "type": "agent_message",
+   "agent": "report_agent",
+   "text": "## Summary\nThe production line operated entirely within normal parameters during the shift scan, with all machines functioning without any anomalies. No alert limit breaches, trips, baseline drifts, stuck sensors, or signal dropouts were detected.\n\n## Findings\n| Machine | Issue | Priority | Confidence |\n| --- | --- | --- | --- |\n| None | No anomalies detected | P4 | High |\n\n## Recommended actions\n1. Continue standard routine monitoring for all machines (FILLER-01, CAPPER-01, LABELER-01, PACKER-01).\n2. Proceed with normal shift handover procedures.\n\n## Notes\nNo limitations or special follow-up checks are required as the entire line is healthy.",
+   "t": 12.77
+  },
+  {
+   "type": "final",
+   "report": "## Summary\nThe production line operated entirely within normal parameters during the shift scan, with all machines functioning without any anomalies. No alert limit breaches, trips, baseline drifts, stuck sensors, or signal dropouts were detected.\n\n## Findings\n| Machine | Issue | Priority | Confidence |\n| --- | --- | --- | --- |\n| None | No anomalies detected | P4 | High |\n\n## Recommended actions\n1. Continue standard routine monitoring for all machines (FILLER-01, CAPPER-01, LABELER-01, PACKER-01).\n2. Proceed with normal shift handover procedures.\n\n## Notes\nNo limitations or special follow-up checks are required as the entire line is healthy.",
+   "usage": {
+    "prompt_tokens": 2977,
+    "output_tokens": 229,
+    "total_tokens": 3206,
+    "llm_calls": 4,
+    "est_cost_usd": 0.0,
+    "by_agent": {
+     "detection_agent": {
+      "prompt_tokens": 1273,
+      "output_tokens": 75,
+      "llm_calls": 2
+     },
+     "diagnosis_agent": {
+      "prompt_tokens": 916,
+      "output_tokens": 4,
+      "llm_calls": 1
+     },
+     "report_agent": {
+      "prompt_tokens": 788,
+      "output_tokens": 150,
+      "llm_calls": 1
+     }
+    }
+   },
+   "duration_s": 12.77,
+   "t": 12.77
+  }
+ ]
+}

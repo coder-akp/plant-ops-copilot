@@ -1,0 +1,226 @@
+{
+ "meta": {
+  "scenario": "sensor_fault",
+  "provider": "gemini",
+  "model": "gemini-3.5-flash-lite",
+  "recorded_at": "2026-11-10",
+  "usage": {
+   "prompt_tokens": 9292,
+   "output_tokens": 955,
+   "total_tokens": 10247,
+   "llm_calls": 7,
+   "est_cost_usd": 0.0,
+   "by_agent": {
+    "detection_agent": {
+     "prompt_tokens": 2611,
+     "output_tokens": 267,
+     "llm_calls": 3
+    },
+    "diagnosis_agent": {
+     "prompt_tokens": 3476,
+     "output_tokens": 320,
+     "llm_calls": 2
+    },
+    "report_agent": {
+     "prompt_tokens": 3205,
+     "output_tokens": 368,
+     "llm_calls": 2
+    }
+   }
+  }
+ },
+ "events": [
+  {
+   "type": "run_start",
+   "run_id": "576e21faef49",
+   "scenario": "sensor_fault",
+   "provider": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "t": 0.0
+  },
+  {
+   "type": "agent_start",
+   "agent": "detection_agent",
+   "label": "Detection agent",
+   "t": 7.37
+  },
+  {
+   "type": "tool_call",
+   "agent": "detection_agent",
+   "name": "scan_line",
+   "args": {},
+   "t": 7.37
+  },
+  {
+   "type": "tool_result",
+   "agent": "detection_agent",
+   "name": "scan_line",
+   "preview": "{\"window\": {\"start\": \"2026-03-02T06:00:00\", \"end\": \"2026-03-02T11:59:50\", \"baseline_until\": \"07:29\"}, \"method\": \"robust z-score vs first-quarter baseline (10 min rolling median), alarm limits, flatline/dropout checks, IsolationForest per machine\", \"findings\": [{\"machine_id\": \"LABELER-01\", \"signal\": \"temp_c\", \"severity\": 75, \"issues\": [\"signal_dropout\", \"stuck_sensor\"], \"evidence\": {\"missing_minutes\": 16.2, \"dropout_from\": \"09:30\", \"dropout_to\": \"09:49\", \"flatline_minutes\": 79.8, \"flatline_from\": \"08:00\", \"flatline_to\": \"09:29\", \"flatline_value\": 36.165, \"baseline\": 36.647, \"latest\": 35.576, \"max\": 38.727, \"alert_limit\": 50.0}, \"machine_multivariate_anomaly_minutes\": 0.0}], \"machines_without_findings\": [\"CAPPER-01\", \"FILLER-01\", \"PACKER-01\"]}",
+   "t": 8.56
+  },
+  {
+   "type": "tool_call",
+   "agent": "detection_agent",
+   "name": "get_signal_trend",
+   "args": {
+    "signal": "temp_c",
+    "machine_id": "LABELER-01"
+   },
+   "t": 13.74
+  },
+  {
+   "type": "tool_result",
+   "agent": "detection_agent",
+   "name": "get_signal_trend",
+   "preview": "{\"machine_id\": \"LABELER-01\", \"signal\": \"temp_c\", \"unit\": \"temperature (degC)\", \"hourly\": [{\"hour\": \"06:00\", \"avg\": 36.451, \"max\": 37.983, \"valid_samples\": 313}, {\"hour\": \"07:00\", \"avg\": 36.868, \"max\": 38.727, \"valid_samples\": 349}, {\"hour\": \"08:00\", \"avg\": 36.165, \"max\": 36.165, \"valid_samples\": 360}, {\"hour\": \"09:00\", \"avg\": 35.735, \"max\": 36.226, \"valid_samples\": 180}, {\"hour\": \"10:00\", \"avg\": 35.297, \"max\": 36.856, \"valid_samples\": 360}, {\"hour\": \"11:00\", \"avg\": 35.333, \"max\": 36.852, \"valid_samples\": 360}], \"limits\": {\"alert\": 50.0}}",
+   "t": 13.75
+  },
+  {
+   "type": "agent_message",
+   "agent": "detection_agent",
+   "text": "**Handover Report: Scenario 'sensor_fault'**\n\nThe bottling line scan detected anomalies on **LABELER-01** (severity 75). All other machines (FILLER-01, CAPPER-01, PACKER-01) are healthy.\n\n* **LABELER-01 (`temp_c`)**: \n  - **Issues**: Stuck sensor and signal dropout.\n  - **Details**: The signal flatlined at a constant value of `36.165` °C for `79.8` minutes from `08:00` to `09:29`. This was followed by a signal dropout from `09:30` to `09:49` (`16.2` missing minutes).\n  - **Alarm Limits**: Alert limit is `50` °C. Shift maximum reached `38.727` °C at 07:00, remaining well below the alarm limit. Latest value is `35.576` °C.",
+   "t": 19.85
+  },
+  {
+   "type": "agent_start",
+   "agent": "diagnosis_agent",
+   "label": "Diagnosis agent",
+   "t": 21.08
+  },
+  {
+   "type": "tool_call",
+   "agent": "diagnosis_agent",
+   "name": "search_manuals",
+   "args": {
+    "query": "stuck temperature sensor flatline",
+    "machine_id": "LABELER-01"
+   },
+   "t": 21.08
+  },
+  {
+   "type": "tool_call",
+   "agent": "diagnosis_agent",
+   "name": "search_manuals",
+   "args": {
+    "query": "signal dropout missing minutes temperature",
+    "machine_id": "LABELER-01"
+   },
+   "t": 21.08
+  },
+  {
+   "type": "tool_call",
+   "agent": "diagnosis_agent",
+   "name": "get_machine_kpis",
+   "args": {
+    "machine_id": "LABELER-01"
+   },
+   "t": 21.08
+  },
+  {
+   "type": "tool_result",
+   "agent": "diagnosis_agent",
+   "name": "search_manuals",
+   "preview": "{\"query\": \"stuck temperature sensor flatline\", \"machine_id\": \"LABELER-01\", \"results\": [{\"source\": \"MNT-103 §2\", \"title\": \"2. Stuck-at (flatline) signature\", \"score\": 7.74, \"text\": \"A real temperature always shows some noise, typically a few tenths of a degree. A value that stays identical to the last digit for more than 5 minutes while the machine runs is a stuck sensor or a frozen value in the PLC or historian. Cross-check related signals: if motor current and vibration are normal and nothing changed in the process, the cause is the instrumentation and not the machine.\"}, {\"source\": \"MNT-103 §5\", \"title\": \"5. Data quality note\", \"score\": 4.34, \"text\": \"Do not use stuck or missing periods for trend analysis, OEE, or model training. Mark them as invalid.\"}, {\"source\": \"MNT-103 §1\", \"title\": \"1. Why sensor signals go wrong\", \"score\": 3.64, \"text\": \"Temperature sensors (RTD or thermocouple) fail because of loose terminals, damaged cables, moisture, or a faulty analog input channel. The result is a bad measurement, not necessarily a bad machine.\"}]}",
+   "t": 21.1
+  },
+  {
+   "type": "tool_result",
+   "agent": "diagnosis_agent",
+   "name": "search_manuals",
+   "preview": "{\"query\": \"signal dropout missing minutes temperature\", \"machine_id\": \"LABELER-01\", \"results\": [{\"source\": \"MNT-103 §3\", \"title\": \"3. Dropout signature\", \"score\": 6.3, \"text\": \"Missing samples (null or NaN) are usually abrupt. Common causes are a loose connector, a broken wire, or a communication fault between the PLC and the historian. A stuck period that ends in a dropout often points to the same wiring or channel problem getting worse.\"}, {\"source\": \"MNT-104 §3\", \"title\": \"3. After cleaning\", \"score\": 4.27, \"text\": \"Temperatures may be a little lower for a few minutes after cleaning because of rinse water. If a signal does not return to its previous level within 15 minutes, investigate.\"}, {\"source\": \"MNT-103 §2\", \"title\": \"2. Stuck-at (flatline) signature\", \"score\": 2.93, \"text\": \"A real temperature always shows some noise, typically a few tenths of a degree. A value that stays identical to the last digit for more than 5 minutes while the machine runs is a stuck sensor or a frozen value in the PLC or historian. Cross-check related signals: if motor current and vibration are normal and nothing changed in the process, the cause is the instrumentation and not the machine.\"}]}",
+   "t": 21.1
+  },
+  {
+   "type": "tool_result",
+   "agent": "diagnosis_agent",
+   "name": "get_machine_kpis",
+   "preview": "{\"machine_id\": \"LABELER-01\", \"availability_pct\": 96.1, \"fault_events\": 0, \"longest_fault_s\": 0, \"fault_s\": 0.0, \"idle_s\": 810.0, \"clean_s\": 600.0, \"avg_temp_c\": 35.98, \"max_temp_c\": 38.73, \"max_vibration_mm_s\": 1.582, \"max_motor_current_a\": 7.182, \"total_rejects\": 238.9, \"stops_over_1min\": [{\"state\": \"IDLE\", \"from\": \"06:14\", \"minutes\": 1.8}, {\"state\": \"IDLE\", \"from\": \"06:26\", \"minutes\": 3.5}, {\"state\": \"IDLE\", \"from\": \"06:54\", \"minutes\": 2.5}, {\"state\": \"IDLE\", \"from\": \"07:35\", \"minutes\": 1.8}, {\"state\": \"IDLE\", \"from\": \"09:44\", \"minutes\": 3.8}]}",
+   "t": 21.1
+  },
+  {
+   "type": "agent_message",
+   "agent": "diagnosis_agent",
+   "text": "**Diagnosis:**\n\n* **Root Cause (Instrumentation):** Sensor fault (loose terminals, damaged cable, moisture, or faulty PLC input channel) [MNT-103 §1]. \n  * *Evidence For:* The temperature flatlined identically for 79.8 minutes without any noise, followed by a 16.2-minute signal dropout. Motor current and vibration remained normal, matching the stuck-at and dropout signatures [MNT-103 §2, §3].\n  * *Alternative:* PLC/historian communication or frozen value [MNT-103 §2, §3].\n  * *Confidence:* High.\n* **Machine Degradation:** Mechanical overheating or bearing failure.\n  * *Evidence For:* Temperature anomaly on LABELER-01.\n  * *Evidence Against:* Max temperature reached only 38.7 °C (well below the 50 °C alert limit); motor current and vibration stayed normal; no fault events recorded.\n  * *Alternative:* Process cooling effect.\n  * *Confidence:* Low.",
+   "t": 25.39
+  },
+  {
+   "type": "agent_start",
+   "agent": "report_agent",
+   "label": "Report agent",
+   "t": 28.21
+  },
+  {
+   "type": "tool_call",
+   "agent": "report_agent",
+   "name": "propose_work_order",
+   "args": {
+    "evidence": "Signal flatlined at 36.165 °C for 79.8 minutes (08:00–09:29) followed by a 16.2-minute signal dropout (09:30–09:49). Motor current and vibration remained normal.",
+    "priority": "P3",
+    "recommended_action": "Inspect sensor wiring, terminal connections, and PLC input channel for LABELER-01 temperature sensor.",
+    "title": "Investigate LABELER-01 Sensor Fault and Signal Dropout",
+    "machine_id": "LABELER-01",
+    "suspected_cause": "Sensor fault (loose terminals, damaged cable, moisture, or faulty PLC input channel)"
+   },
+   "t": 28.22
+  },
+  {
+   "type": "tool_result",
+   "agent": "report_agent",
+   "name": "propose_work_order",
+   "preview": "{\"status\": \"pending_approval\", \"work_order\": {\"id\": \"WO-576E21-1\", \"run_id\": \"576e21faef49\", \"machine_id\": \"LABELER-01\", \"priority\": \"P3\", \"title\": \"Investigate LABELER-01 Sensor Fault and Signal Dropout\", \"evidence\": \"Signal flatlined at 36.165 °C for 79.8 minutes (08:00–09:29) followed by a 16.2-minute signal dropout (09:30–09:49). Motor current and vibration remained normal.\", \"suspected_cause\": \"Sensor fault (loose terminals, damaged cable, moisture, or faulty PLC input channel)\", \"recommended_action\": \"Inspect sensor wiring, terminal connections, and PLC input channel for LABELER-01 temperature sensor.\", \"status\": \"pending_approval\", \"created_at\": 1794322074.4302146}}",
+   "t": 28.22
+  },
+  {
+   "type": "work_order",
+   "order": {
+    "id": "WO-576E21-1",
+    "run_id": "576e21faef49",
+    "machine_id": "LABELER-01",
+    "priority": "P3",
+    "title": "Investigate LABELER-01 Sensor Fault and Signal Dropout",
+    "evidence": "Signal flatlined at 36.165 °C for 79.8 minutes (08:00–09:29) followed by a 16.2-minute signal dropout (09:30–09:49). Motor current and vibration remained normal.",
+    "suspected_cause": "Sensor fault (loose terminals, damaged cable, moisture, or faulty PLC input channel)",
+    "recommended_action": "Inspect sensor wiring, terminal connections, and PLC input channel for LABELER-01 temperature sensor.",
+    "status": "pending_approval",
+    "created_at": 1794322074.4302146
+   },
+   "t": 28.22
+  },
+  {
+   "type": "agent_message",
+   "agent": "report_agent",
+   "text": "## Summary\nDuring the bottling line scan, an instrumentation anomaly was detected on LABELER-01 while all other machines remained healthy. The issue has been diagnosed as a sensor fault rather than mechanical overheating, and a maintenance work order has been proposed.\n\n## Findings\n| Machine | Issue | Priority | Confidence |\n| :--- | :--- | :--- | :--- |\n| LABELER-01 | Sensor fault and signal dropout on temperature sensor | P3 | High |\n\n## Recommended actions\n1. Inspect sensor wiring, terminal connections, and PLC input channel for the LABELER-01 temperature sensor.\n2. Verify signal stability and communication integrity from the sensor to the historian.\n\n## Notes\nThe maximum recorded temperature of 38.7 °C remained well below the 50 °C alert limit, and normal motor current and vibration levels confirm there is no mechanical degradation. Follow-up checks should focus exclusively on the instrumentation loop.",
+   "t": 33.59
+  },
+  {
+   "type": "final",
+   "report": "## Summary\nDuring the bottling line scan, an instrumentation anomaly was detected on LABELER-01 while all other machines remained healthy. The issue has been diagnosed as a sensor fault rather than mechanical overheating, and a maintenance work order has been proposed.\n\n## Findings\n| Machine | Issue | Priority | Confidence |\n| :--- | :--- | :--- | :--- |\n| LABELER-01 | Sensor fault and signal dropout on temperature sensor | P3 | High |\n\n## Recommended actions\n1. Inspect sensor wiring, terminal connections, and PLC input channel for the LABELER-01 temperature sensor.\n2. Verify signal stability and communication integrity from the sensor to the historian.\n\n## Notes\nThe maximum recorded temperature of 38.7 °C remained well below the 50 °C alert limit, and normal motor current and vibration levels confirm there is no mechanical degradation. Follow-up checks should focus exclusively on the instrumentation loop.",
+   "usage": {
+    "prompt_tokens": 9292,
+    "output_tokens": 955,
+    "total_tokens": 10247,
+    "llm_calls": 7,
+    "est_cost_usd": 0.0,
+    "by_agent": {
+     "detection_agent": {
+      "prompt_tokens": 2611,
+      "output_tokens": 267,
+      "llm_calls": 3
+     },
+     "diagnosis_agent": {
+      "prompt_tokens": 3476,
+      "output_tokens": 320,
+      "llm_calls": 2
+     },
+     "report_agent": {
+      "prompt_tokens": 3205,
+      "output_tokens": 368,
+      "llm_calls": 2
+     }
+    }
+   },
+   "duration_s": 33.59,
+   "t": 33.59
+  }
+ ]
+}

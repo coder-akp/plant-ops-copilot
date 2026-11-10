@@ -1,0 +1,4 @@
+# Build-time only: converts the simulator output into the DuckDB database (dbt).
+-r requirements.txt
+dbt-core==1.12.6
+dbt-duckdb==1.11.1

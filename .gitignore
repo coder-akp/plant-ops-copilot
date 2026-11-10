@@ -1,0 +1,14 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+data/plantops.duckdb
+data/plantops.duckdb.wal
+data/raw/*.parquet
+dbt_project/target/
+dbt_project/logs/
+logs/
+*.log
+.DS_Store

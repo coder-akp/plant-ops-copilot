@@ -1,0 +1,226 @@
+{
+ "meta": {
+  "scenario": "bearing_wear",
+  "provider": "gemini",
+  "model": "gemini-3.5-flash-lite",
+  "recorded_at": "2026-11-10",
+  "usage": {
+   "prompt_tokens": 11836,
+   "output_tokens": 996,
+   "total_tokens": 12832,
+   "llm_calls": 8,
+   "est_cost_usd": 0.0,
+   "by_agent": {
+    "detection_agent": {
+     "prompt_tokens": 2922,
+     "output_tokens": 289,
+     "llm_calls": 3
+    },
+    "diagnosis_agent": {
+     "prompt_tokens": 5707,
+     "output_tokens": 323,
+     "llm_calls": 3
+    },
+    "report_agent": {
+     "prompt_tokens": 3207,
+     "output_tokens": 384,
+     "llm_calls": 2
+    }
+   }
+  }
+ },
+ "events": [
+  {
+   "type": "run_start",
+   "run_id": "e4f26b3ede79",
+   "scenario": "bearing_wear",
+   "provider": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "t": 0.0
+  },
+  {
+   "type": "agent_start",
+   "agent": "detection_agent",
+   "label": "Detection agent",
+   "t": 1.05
+  },
+  {
+   "type": "tool_call",
+   "agent": "detection_agent",
+   "name": "scan_line",
+   "args": {},
+   "t": 1.05
+  },
+  {
+   "type": "tool_result",
+   "agent": "detection_agent",
+   "name": "scan_line",
+   "preview": "{\"window\": {\"start\": \"2026-03-02T06:00:00\", \"end\": \"2026-03-02T11:59:50\", \"baseline_until\": \"07:29\"}, \"method\": \"robust z-score vs first-quarter baseline (10 min rolling median), alarm limits, flatline/dropout checks, IsolationForest per machine\", \"findings\": [{\"machine_id\": \"FILLER-01\", \"signal\": \"vibration_mm_s\", \"severity\": 85, \"issues\": [\"drift_up\", \"alert_limit_breach\"], \"evidence\": {\"first_breach\": \"09:21\", \"breach_minutes\": 152.3, \"slope_per_hour\": 1.46, \"first_alert_breach\": \"10:40\", \"samples_over_alert\": 343, \"baseline\": 2.101, \"latest\": 5.926, \"max\": 6.886, \"max_z\": 26.8, \"alert_limit\": 4.5, \"trip_limit\": 7.1}, \"machine_multivariate_anomaly_minutes\": 143.3}, {\"machine_id\": \"FILLER-01\", \"signal\": \"motor_current_a\", \"severity\": 40, \"issues\": [\"drift_up\"], \"evidence\": {\"first_breach\": \"11:11\", \"breach_minutes\": 42.3, \"slope_per_hour\": 0.563, \"hours_to_alert_at_current_trend\": 2.8, \"baseline\": 14.04, \"latest\": 15.913, \"max\": 16.647, \"max_z\": 5.8, \"alert_limit\": 17.5, \"trip_limit\": 21.0}, \"machine_multivariate_anomaly_minutes\": 143.3}], \"machines_without_findings\": [\"CAPPER-01\", \"LABELER-01\", \"PACKER-01\"]}",
+   "t": 2.12
+  },
+  {
+   "type": "tool_call",
+   "agent": "detection_agent",
+   "name": "get_signal_trend",
+   "args": {
+    "machine_id": "FILLER-01",
+    "signal": "vibration_mm_s"
+   },
+   "t": 7.39
+  },
+  {
+   "type": "tool_result",
+   "agent": "detection_agent",
+   "name": "get_signal_trend",
+   "preview": "{\"machine_id\": \"FILLER-01\", \"signal\": \"vibration_mm_s\", \"unit\": \"vibration (mm/s)\", \"hourly\": [{\"hour\": \"06:00\", \"avg\": 2.074, \"max\": 2.476, \"valid_samples\": 326}, {\"hour\": \"07:00\", \"avg\": 2.146, \"max\": 2.537, \"valid_samples\": 353}, {\"hour\": \"08:00\", \"avg\": 2.282, \"max\": 2.903, \"valid_samples\": 345}, {\"hour\": \"09:00\", \"avg\": 2.944, \"max\": 3.792, \"valid_samples\": 285}, {\"hour\": \"10:00\", \"avg\": 3.888, \"max\": 5.0, \"valid_samples\": 360}, {\"hour\": \"11:00\", \"avg\": 5.261, \"max\": 6.886, \"valid_samples\": 335}], \"limits\": {\"alert\": 4.5, \"trip\": 7.1}}",
+   "t": 7.41
+  },
+  {
+   "type": "agent_message",
+   "agent": "detection_agent",
+   "text": "FILLER-01 shows two anomalies:\n\n1. **vibration_mm_s**: Upward drift started at 09:21. First alert limit (4.5 mm/s) breach occurred at 10:40. Latest value is 5.926 mm/s with a max of 6.886 mm/s (trip limit 7.1 mm/s). Hourly averages rose from 2.074 (06:00) to 5.261 (11:00), growing at 1.46 per hour.\n2. **motor_current_a**: Upward drift started at 11:11. Latest value is 15.913 A and max is 16.647 A (alert limit 17.5 A, trip limit 21 A). At current trend (slope 0.563 per hour), it will reach the alert limit in 2.8 hours.\n\nCAPPER-01, LABELER-01, and PACKER-01 are healthy with no anomalies detected.",
+   "t": 13.96
+  },
+  {
+   "type": "agent_start",
+   "agent": "diagnosis_agent",
+   "label": "Diagnosis agent",
+   "t": 21.57
+  },
+  {
+   "type": "tool_call",
+   "agent": "diagnosis_agent",
+   "name": "search_manuals",
+   "args": {
+    "machine_id": "FILLER-01",
+    "query": "vibration mm/s upward drift motor current"
+   },
+   "t": 21.57
+  },
+  {
+   "type": "tool_call",
+   "agent": "diagnosis_agent",
+   "name": "get_machine_kpis",
+   "args": {
+    "machine_id": "FILLER-01"
+   },
+   "t": 21.57
+  },
+  {
+   "type": "tool_result",
+   "agent": "diagnosis_agent",
+   "name": "search_manuals",
+   "preview": "{\"query\": \"vibration mm/s upward drift motor current\", \"machine_id\": \"FILLER-01\", \"results\": [{\"source\": \"MNT-101 §2\", \"title\": \"2. Vibration and current limits\", \"score\": 9.85, \"text\": \"Vibration is measured as velocity RMS in mm/s. Normal operation is below 3.0 mm/s. The alert limit is 4.5 mm/s and the trip limit is 7.1 mm/s (stop the machine). Nominal motor current is 14 A; the alert limit is 17.5 A (125 % of nominal) and the trip limit is 21 A.\"}, {\"source\": \"MNT-101 §4\", \"title\": \"4. Differential diagnosis\", \"score\": 5.92, \"text\": \"Misalignment gives a steady offset in vibration from the start instead of a drift. Loose mounting gives erratic, spiky vibration. Lubrication starvation gives a faster rise together with a temperature increase. Product jams give short spikes in current and vibration that disappear again, not a persistent drift.\"}, {\"source\": \"MNT-104 §2\", \"title\": \"2. Effect on data\", \"score\": 4.44, \"text\": \"During CLEAN the motor current and vibration drop to idle values and the cycle time is not defined. This is expected and not an anomaly. CLEAN time is excluded from availability calculations.\"}]}",
+   "t": 21.79
+  },
+  {
+   "type": "tool_result",
+   "agent": "diagnosis_agent",
+   "name": "get_machine_kpis",
+   "preview": "{\"machine_id\": \"FILLER-01\", \"availability_pct\": 95.4, \"fault_events\": 3, \"longest_fault_s\": 90, \"fault_s\": 250.0, \"idle_s\": 710.0, \"clean_s\": 600.0, \"avg_temp_c\": 41.02, \"max_temp_c\": 43.57, \"max_vibration_mm_s\": 6.886, \"max_motor_current_a\": 16.647, \"total_rejects\": 202.2, \"stops_over_1min\": [{\"state\": \"IDLE\", \"from\": \"06:08\", \"minutes\": 2.7}, {\"state\": \"IDLE\", \"from\": \"06:17\", \"minutes\": 3.0}, {\"state\": \"IDLE\", \"from\": \"07:55\", \"minutes\": 1.2}, {\"state\": \"IDLE\", \"from\": \"08:50\", \"minutes\": 2.5}, {\"state\": \"IDLE\", \"from\": \"09:49\", \"minutes\": 2.5}, {\"state\": \"FAULT\", \"from\": \"11:10\", \"minutes\": 1.3}, {\"state\": \"FAULT\", \"from\": \"11:41\", \"minutes\": 1.3}, {\"state\": \"FAULT\", \"from\": \"11:56\", \"minutes\": 1.5}]}",
+   "t": 21.79
+  },
+  {
+   "type": "tool_call",
+   "agent": "diagnosis_agent",
+   "name": "search_manuals",
+   "args": {
+    "machine_id": "FILLER-01",
+    "query": "vibration drift bearing lubrication starvation"
+   },
+   "t": 29.55
+  },
+  {
+   "type": "tool_result",
+   "agent": "diagnosis_agent",
+   "name": "search_manuals",
+   "preview": "{\"query\": \"vibration drift bearing lubrication starvation\", \"machine_id\": \"FILLER-01\", \"results\": [{\"source\": \"MNT-101 §4\", \"title\": \"4. Differential diagnosis\", \"score\": 11.41, \"text\": \"Misalignment gives a steady offset in vibration from the start instead of a drift. Loose mounting gives erratic, spiky vibration. Lubrication starvation gives a faster rise together with a temperature increase. Product jams give short spikes in current and vibration that disappear again, not a persistent drift.\"}, {\"source\": \"MNT-101 §5\", \"title\": \"5. Recommended actions\", \"score\": 4.24, \"text\": \"First sign of drift, no limit crossed: lubricate according to schedule and plan an inspection within 24 hours. Alert limit crossed: plan bearing replacement at the next planned stop, at the latest within 8 hours (spare part: bearing kit 6209-2RS). Trip level reached: stop the machine and replace the bearing before restart.\"}, {\"source\": \"MNT-101 §3\", \"title\": \"3. Typical bearing wear signature\", \"score\": 3.41, \"text\": \"Bearing wear shows as a slow, monotonic rise of vibration over hours or days. The motor current rises gradually (roughly 10 to 15 % above baseline) and the cycle time stretches slightly. Temperature changes only a little. In late stages the machine starts to stop for short periods (micro-stops) that last 30 to 90 seconds.\"}]}",
+   "t": 29.55
+  },
+  {
+   "type": "agent_message",
+   "agent": "diagnosis_agent",
+   "text": "**FILLER-01 Diagnosis:**\n\n1. **Vibration and Motor Current Drift:** \n- **Most Likely Cause:** Bearing wear [MNT-101 §3]. \n- **Evidence for:** The slow, monotonic upward drift of vibration (reaching 6.886 mm/s) [MNT-101 §3] followed later by a gradual rise in motor current (to 16.647 A) [MNT-101 §3], along with recent micro-stops lasting 90 seconds, perfectly matches the bearing wear signature in [MNT-101 §3]. Misalignment and loose mounting are ruled out because they produce offsets or spiky vibration rather than persistent drift [MNT-101 §4]. Lubrication starvation is unlikely as it causes a faster rise with significant temperature increase [MNT-101 §4], whereas KPI data shows stable temperatures (~41°C).\n- **Alternative:** Lubrication starvation [MNT-101 §4].\n- **Confidence:** High.",
+   "t": 35.84
+  },
+  {
+   "type": "agent_start",
+   "agent": "report_agent",
+   "label": "Report agent",
+   "t": 48.34
+  },
+  {
+   "type": "tool_call",
+   "agent": "report_agent",
+   "name": "propose_work_order",
+   "args": {
+    "machine_id": "FILLER-01",
+    "title": "FILLER-01 Vibration and Motor Current Drift Investigation",
+    "priority": "P2",
+    "evidence": "Vibration reached max 6.886 mm/s (alert limit 4.5 mm/s breached at 10:40) and motor current reached max 16.647 A with upward drift.",
+    "suspected_cause": "Bearing wear [MNT-101 §3]",
+    "recommended_action": "Inspect FILLER-01 bearings and lubrication system; schedule preventive maintenance before alert limit 17.5 A is reached."
+   },
+   "t": 48.34
+  },
+  {
+   "type": "tool_result",
+   "agent": "report_agent",
+   "name": "propose_work_order",
+   "preview": "{\"status\": \"pending_approval\", \"work_order\": {\"id\": \"WO-E4F26B-1\", \"run_id\": \"e4f26b3ede79\", \"machine_id\": \"FILLER-01\", \"priority\": \"P2\", \"title\": \"FILLER-01 Vibration and Motor Current Drift Investigation\", \"evidence\": \"Vibration reached max 6.886 mm/s (alert limit 4.5 mm/s breached at 10:40) and motor current reached max 16.647 A with upward drift.\", \"suspected_cause\": \"Bearing wear [MNT-101 §3]\", \"recommended_action\": \"Inspect FILLER-01 bearings and lubrication system; schedule preventive maintenance before alert limit 17.5 A is reached.\", \"status\": \"pending_approval\", \"created_at\": 1794322015.762653}}",
+   "t": 48.34
+  },
+  {
+   "type": "work_order",
+   "order": {
+    "id": "WO-E4F26B-1",
+    "run_id": "e4f26b3ede79",
+    "machine_id": "FILLER-01",
+    "priority": "P2",
+    "title": "FILLER-01 Vibration and Motor Current Drift Investigation",
+    "evidence": "Vibration reached max 6.886 mm/s (alert limit 4.5 mm/s breached at 10:40) and motor current reached max 16.647 A with upward drift.",
+    "suspected_cause": "Bearing wear [MNT-101 §3]",
+    "recommended_action": "Inspect FILLER-01 bearings and lubrication system; schedule preventive maintenance before alert limit 17.5 A is reached.",
+    "status": "pending_approval",
+    "created_at": 1794322015.762653
+   },
+   "t": 48.34
+  },
+  {
+   "type": "agent_message",
+   "agent": "report_agent",
+   "text": "## Summary\nFILLER-01 is exhibiting ongoing vibration and motor current upward drift indicative of bearing wear, triggering an alert status. All other plant machines (CAPPER-01, LABELER-01, PACKER-01) remain completely healthy with no anomalies detected.\n\n## Findings\n\n| Machine | Issue | Priority | Confidence |\n| :--- | :--- | :--- | :--- |\n| FILLER-01 | Vibration and motor current upward drift | P2 | High |\n\n## Recommended actions\n\n1. Review and approve the proposed maintenance work order for FILLER-01.\n2. Inspect FILLER-01 bearings and lubrication system to confirm bearing wear before motor current reaches the alert limit.\n3. Continue monitoring CAPPER-01, LABELER-01, and PACKER-01 during routine shift checks.\n\n## Notes\nThe vibration alert limit of 4.5 mm/s was breached at 10:40, and motor current is steadily increasing. Follow-up checks should verify bearing temperature trends and micro-stop frequency.",
+   "t": 58.65
+  },
+  {
+   "type": "final",
+   "report": "## Summary\nFILLER-01 is exhibiting ongoing vibration and motor current upward drift indicative of bearing wear, triggering an alert status. All other plant machines (CAPPER-01, LABELER-01, PACKER-01) remain completely healthy with no anomalies detected.\n\n## Findings\n\n| Machine | Issue | Priority | Confidence |\n| :--- | :--- | :--- | :--- |\n| FILLER-01 | Vibration and motor current upward drift | P2 | High |\n\n## Recommended actions\n\n1. Review and approve the proposed maintenance work order for FILLER-01.\n2. Inspect FILLER-01 bearings and lubrication system to confirm bearing wear before motor current reaches the alert limit.\n3. Continue monitoring CAPPER-01, LABELER-01, and PACKER-01 during routine shift checks.\n\n## Notes\nThe vibration alert limit of 4.5 mm/s was breached at 10:40, and motor current is steadily increasing. Follow-up checks should verify bearing temperature trends and micro-stop frequency.",
+   "usage": {
+    "prompt_tokens": 11836,
+    "output_tokens": 996,
+    "total_tokens": 12832,
+    "llm_calls": 8,
+    "est_cost_usd": 0.0,
+    "by_agent": {
+     "detection_agent": {
+      "prompt_tokens": 2922,
+      "output_tokens": 289,
+      "llm_calls": 3
+     },
+     "diagnosis_agent": {
+      "prompt_tokens": 5707,
+      "output_tokens": 323,
+      "llm_calls": 3
+     },
+     "report_agent": {
+      "prompt_tokens": 3207,
+      "output_tokens": 384,
+      "llm_calls": 2
+     }
+    }
+   },
+   "duration_s": 58.65,
+   "t": 58.65
+  }
+ ]
+}

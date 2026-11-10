@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plant Ops Copilot</title>
+  <meta name="description" content="Multi-agent anomaly triage for a simulated bottling line, built with Google ADK, DuckDB, dbt and Azure.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230a62c4'/%3E%3Cpath d='M16 6l9 10-9 10-9-10z' fill='white'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand"><span class="logo">&#9670;</span> Plant Ops Copilot</div>
+    <nav aria-label="Sections">
+      <a href="#scenarios">Scenarios</a>
+      <a href="#data">Line data</a>
+      <a href="#agents">Agents</a>
+      <a href="#how">How it works</a>
+      <a id="gh" href="#" hidden rel="noopener">GitHub</a>
+    </nav>
+    <div id="statusPill" class="pill">loading&hellip;</div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Multi-agent triage for a simulated bottling line</h1>
+      <p>Four machines, six hours of 10-second sensor data, at most one injected fault. Three AI agents detect the problem, look up the likely root cause in maintenance manuals and write the shift handover report. A human approves the work order. All data is synthetic.</p>
+      <ol class="steps">
+        <li>Pick a shift</li>
+        <li>Explore the data (computed live, no AI involved)</li>
+        <li>Run the agents and watch them work</li>
+      </ol>
+    </section>
+
+    <section class="card" id="scenarios">
+      <h2>1 &middot; Choose a shift</h2>
+      <div id="scenarioCards" class="cards" role="group" aria-label="Scenarios"></div>
+      <details class="truth" id="truth">
+        <summary>Reveal what was injected (spoiler)</summary>
+        <p id="truthText"></p>
+      </details>
+    </section>
+
+    <section class="card" id="data">
+      <h2>2 &middot; Line data <span class="tag">live computation &middot; no LLM</span></h2>
+      <div id="findings" class="chips" aria-live="polite"></div>
+      <div class="controls">
+        <label>Machine <select id="machineSel" aria-label="Machine"></select></label>
+        <label>Signal <select id="signalSel" aria-label="Signal"></select></label>
+      </div>
+      <div id="chart" class="chart" role="img" aria-label="Signal chart"></div>
+      <div class="legend" id="legend"></div>
+      <div class="table-wrap"><table id="kpiTable"></table></div>
+    </section>
+
+    <section class="card" id="agents">
+      <h2>3 &middot; Agent investigation</h2>
+      <div class="runbar">
+        <button class="btn" id="btnReplay" type="button">&#9654; Replay recorded run<small>free &middot; instant</small></button>
+        <button class="btn primary" id="btnLive" type="button">&#9889; Run live<small id="liveNote">real model call</small></button>
+        <input class="code" id="code" type="password" placeholder="access code" autocomplete="off" hidden>
+      </div>
+      <div id="notice"></div>
+      <div id="runMeta" class="meta"></div>
+      <div id="timeline" class="timeline" aria-live="polite"></div>
+      <div id="report" class="report" hidden></div>
+      <div id="orders" class="orders"></div>
+    </section>
+
+    <section class="card how" id="how">
+      <h2>How it works</h2>
+      <svg viewBox="0 0 900 310" role="img" aria-label="Architecture diagram">
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0L10 5L0 10z" fill="currentColor" style="fill:var(--muted)"/>
+          </marker>
+        </defs>
+        <rect class="box" x="10" y="16" width="170" height="52" rx="9"/>
+        <text x="95" y="38" text-anchor="middle">Line simulator</text>
+        <text class="sub" x="95" y="55" text-anchor="middle">4 machines &middot; faults &middot; OPC UA</text>
+        <rect class="box" x="210" y="16" width="170" height="52" rx="9"/>
+        <text x="295" y="38" text-anchor="middle">dbt models</text>
+        <text class="sub" x="295" y="55" text-anchor="middle">state runs &middot; KPI marts</text>
+        <rect class="box" x="410" y="16" width="150" height="52" rx="9"/>
+        <text x="485" y="38" text-anchor="middle">DuckDB</text>
+        <text class="sub" x="485" y="55" text-anchor="middle">read-only</text>
+        <rect class="box" x="590" y="16" width="150" height="52" rx="9"/>
+        <text x="665" y="38" text-anchor="middle">Maintenance manuals</text>
+        <text class="sub" x="665" y="55" text-anchor="middle">BM25 search</text>
+        <path class="arrow" d="M180 42H208"/>
+        <path class="arrow" d="M380 42H408"/>
+
+        <rect class="box ai" x="10" y="108" width="730" height="100" rx="12"/>
+        <text class="sub" x="24" y="126">Google ADK &middot; SequentialAgent &middot; state passed between agents</text>
+        <rect class="box" x="26" y="140" width="200" height="50" rx="9"/>
+        <text x="126" y="161" text-anchor="middle">Detection agent</text>
+        <text class="sub" x="126" y="177" text-anchor="middle">scan_line &middot; get_signal_trend</text>
+        <rect class="box" x="266" y="140" width="200" height="50" rx="9"/>
+        <text x="366" y="161" text-anchor="middle">Diagnosis agent</text>
+        <text class="sub" x="366" y="177" text-anchor="middle">search_manuals &middot; get_machine_kpis</text>
+        <rect class="box" x="506" y="140" width="214" height="50" rx="9"/>
+        <text x="613" y="161" text-anchor="middle">Report agent</text>
+        <text class="sub" x="613" y="177" text-anchor="middle">report &middot; propose_work_order</text>
+        <path class="arrow" d="M226 165H264"/>
+        <path class="arrow" d="M466 165H504"/>
+        <path class="arrow" d="M485 68V106"/>
+        <text class="sub" x="494" y="92">SQL &middot; stats &middot; IsolationForest</text>
+        <path class="arrow" d="M665 68V106"/>
+
+        <rect class="box" x="765" y="128" width="125" height="58" rx="9"/>
+        <text x="827" y="152" text-anchor="middle">LLM</text>
+        <text class="sub" x="827" y="168" text-anchor="middle">Gemini or Azure</text>
+        <text class="sub" x="827" y="180" text-anchor="middle">Foundry</text>
+        <path class="arrow" d="M740 157H763"/>
+
+        <rect class="box" x="10" y="244" width="340" height="52" rx="9"/>
+        <text x="180" y="266" text-anchor="middle">FastAPI + server-sent events</text>
+        <text class="sub" x="180" y="282" text-anchor="middle">Azure Container Apps &middot; scales to zero</text>
+        <rect class="box" x="410" y="244" width="250" height="52" rx="9"/>
+        <text x="535" y="266" text-anchor="middle">Browser</text>
+        <text class="sub" x="535" y="282" text-anchor="middle">live trace &middot; human approval</text>
+        <path class="arrow" d="M120 208V242"/>
+        <path class="arrow" d="M350 270H408"/>
+      </svg>
+      <ul>
+        <li><strong>Deterministic first.</strong> Statistics, alarm limits and an Isolation Forest find the anomalies. The agents call these as tools, so numbers are reproducible and the model only has to reason and write.</li>
+        <li><strong>Cost-aware by design.</strong> Agents pass short summaries to each other, tools return compact JSON, every run has token, step and time limits, and recorded runs replay for free.</li>
+        <li><strong>Human in the loop.</strong> Work orders are only proposals until a person approves them. Nothing here talks to a real maintenance system.</li>
+        <li><strong>Grounded.</strong> Root-cause claims must cite the maintenance manuals (for example <span class="cite">MNT-101 &sect;3</span>). Those manuals are fictional example documents.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>Demo with synthetic data. The agents can make mistakes; the detector's numbers come from code, the explanations from a language model. Live runs are limited per visitor and per day to keep the hosting cost low.</p>
+  </footer>
+
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

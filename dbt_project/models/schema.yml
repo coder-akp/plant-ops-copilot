@@ -1,0 +1,40 @@
+version: 2
+
+models:
+  - name: stg_signals
+    description: Typed 10 s samples for every machine and scenario.
+    columns:
+      - name: sample_id
+        tests: [unique, not_null]
+      - name: scenario
+        tests: [not_null]
+      - name: machine_id
+        tests: [not_null]
+      - name: state
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["RUN", "IDLE", "FAULT", "CLEAN"]
+
+  - name: int_state_runs
+    description: Consecutive machine-state runs (dwell times).
+    columns:
+      - name: duration_s
+        tests: [not_null]
+
+  - name: mart_machine_summary
+    description: Availability and operating statistics per scenario and machine.
+    columns:
+      - name: scenario
+        tests: [not_null]
+      - name: machine_id
+        tests: [not_null]
+      - name: availability_pct
+        tests: [not_null]
+
+  - name: mart_hourly_kpis
+    description: Hourly KPI trends per scenario and machine.
+    columns:
+      - name: hour_start
+        tests: [not_null]

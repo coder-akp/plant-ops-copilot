@@ -1,0 +1,11 @@
+# Runtime dependencies, pinned to the versions used by the test suite.
+# Note: litellm 1.82.7 and 1.82.8 were reported as compromised, and ADK requires >=1.84.
+# Keep the pin and review changes before upgrading.
+google-adk==2.13.0
+litellm==1.108.1
+fastapi==0.162.0
+uvicorn[standard]==0.54.0
+duckdb==2.0.0
+pandas==3.1.1
+numpy==2.5.4
+scikit-learn==1.9.1

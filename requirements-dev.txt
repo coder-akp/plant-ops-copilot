@@ -1,0 +1,6 @@
+# Everything required for local development and the test suite.
+-r requirements-build.txt
+asyncua==2.1.0
+pytest==9.2.0
+pytest-asyncio==1.4.1.post1
+httpx==0.28.1

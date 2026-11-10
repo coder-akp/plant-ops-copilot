@@ -1,0 +1,3 @@
+# Optional: OPC UA simulator server and collector (python -m sim.opcua_server / sim.collector)
+-r requirements.txt
+asyncua==2.1.0

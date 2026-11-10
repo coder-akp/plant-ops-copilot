@@ -1,0 +1,31 @@
+{
+  "_comment": "Alarm limits per machine and signal (synthetic example values). 'alert' = warning limit, 'trip' = protective stop.",
+  "FILLER-01": {
+    "temp_c": {"alert": 55.0},
+    "vibration_mm_s": {"alert": 4.5, "trip": 7.1},
+    "motor_current_a": {"alert": 17.5, "trip": 21.0},
+    "cycle_time_s": {"alert": 2.07},
+    "rejects_per_min": {"alert": 3.0}
+  },
+  "CAPPER-01": {
+    "temp_c": {"alert": 62.0, "trip": 68.0},
+    "vibration_mm_s": {"alert": 4.5, "trip": 7.1},
+    "motor_current_a": {"alert": 12.0, "trip": 14.5},
+    "cycle_time_s": {"alert": 2.07},
+    "rejects_per_min": {"alert": 3.0}
+  },
+  "LABELER-01": {
+    "temp_c": {"alert": 50.0},
+    "vibration_mm_s": {"alert": 4.5, "trip": 7.1},
+    "motor_current_a": {"alert": 7.5, "trip": 9.0},
+    "cycle_time_s": {"alert": 2.07},
+    "rejects_per_min": {"alert": 3.0}
+  },
+  "PACKER-01": {
+    "temp_c": {"alert": 52.0},
+    "vibration_mm_s": {"alert": 4.5, "trip": 7.1},
+    "motor_current_a": {"alert": 14.0, "trip": 16.5},
+    "cycle_time_s": {"alert": 4.14},
+    "rejects_per_min": {"alert": 3.0}
+  }
+}

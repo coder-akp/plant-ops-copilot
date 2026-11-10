@@ -1,0 +1,209 @@
+{
+ "meta": {
+  "scenario": "overheating",
+  "provider": "gemini",
+  "model": "gemini-3.5-flash-lite",
+  "recorded_at": "2026-11-10",
+  "usage": {
+   "prompt_tokens": 9419,
+   "output_tokens": 1033,
+   "total_tokens": 10452,
+   "llm_calls": 7,
+   "est_cost_usd": 0.0,
+   "by_agent": {
+    "detection_agent": {
+     "prompt_tokens": 2655,
+     "output_tokens": 345,
+     "llm_calls": 3
+    },
+    "diagnosis_agent": {
+     "prompt_tokens": 3510,
+     "output_tokens": 237,
+     "llm_calls": 2
+    },
+    "report_agent": {
+     "prompt_tokens": 3254,
+     "output_tokens": 451,
+     "llm_calls": 2
+    }
+   }
+  }
+ },
+ "events": [
+  {
+   "type": "run_start",
+   "run_id": "65efbec32146",
+   "scenario": "overheating",
+   "provider": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "t": 0.0
+  },
+  {
+   "type": "agent_start",
+   "agent": "detection_agent",
+   "label": "Detection agent",
+   "t": 0.82
+  },
+  {
+   "type": "tool_call",
+   "agent": "detection_agent",
+   "name": "scan_line",
+   "args": {},
+   "t": 0.82
+  },
+  {
+   "type": "tool_result",
+   "agent": "detection_agent",
+   "name": "scan_line",
+   "preview": "{\"window\": {\"start\": \"2026-03-02T06:00:00\", \"end\": \"2026-03-02T11:59:50\", \"baseline_until\": \"07:29\"}, \"method\": \"robust z-score vs first-quarter baseline (10 min rolling median), alarm limits, flatline/dropout checks, IsolationForest per machine\", \"findings\": [{\"machine_id\": \"CAPPER-01\", \"signal\": \"temp_c\", \"severity\": 100, \"issues\": [\"drift_up\", \"alert_limit_breach\", \"trip_limit_reached\"], \"evidence\": {\"first_breach\": \"08:39\", \"breach_minutes\": 133.5, \"slope_per_hour\": 2.007, \"first_alert_breach\": \"08:49\", \"samples_over_alert\": 918, \"first_trip_level\": \"09:11\", \"baseline\": 52.485, \"latest\": 65.235, \"max\": 68.529, \"max_z\": 23.3, \"alert_limit\": 62.0, \"trip_limit\": 68.0}, \"machine_multivariate_anomaly_minutes\": 51.0}], \"machines_without_findings\": [\"FILLER-01\", \"LABELER-01\", \"PACKER-01\"]}",
+   "t": 2.05
+  },
+  {
+   "type": "tool_call",
+   "agent": "detection_agent",
+   "name": "get_signal_trend",
+   "args": {
+    "machine_id": "CAPPER-01",
+    "signal": "temp_c"
+   },
+   "t": 3.05
+  },
+  {
+   "type": "tool_result",
+   "agent": "detection_agent",
+   "name": "get_signal_trend",
+   "preview": "{\"machine_id\": \"CAPPER-01\", \"signal\": \"temp_c\", \"unit\": \"temperature (degC)\", \"hourly\": [{\"hour\": \"06:00\", \"avg\": 52.375, \"max\": 53.787, \"valid_samples\": 343}, {\"hour\": \"07:00\", \"avg\": 52.602, \"max\": 54.291, \"valid_samples\": 344}, {\"hour\": \"08:00\", \"avg\": 55.41, \"max\": 64.423, \"valid_samples\": 342}, {\"hour\": \"09:00\", \"avg\": 64.611, \"max\": 67.879, \"valid_samples\": 180}, {\"hour\": \"10:00\", \"avg\": 64.22, \"max\": 67.636, \"valid_samples\": 264}, {\"hour\": \"11:00\", \"avg\": 63.858, \"max\": 67.979, \"valid_samples\": 254}], \"limits\": {\"alert\": 62.0, \"trip\": 68.0}}",
+   "t": 3.06
+  },
+  {
+   "type": "agent_message",
+   "agent": "detection_agent",
+   "text": "**Handover Report - Detection Summary**\n\nThe line shows one critical anomaly on **CAPPER-01** (signal: `temp_c`), while FILLER-01, LABELER-01, and PACKER-01 are healthy.\n\n* **CAPPER-01 (`temp_c`)**: Severe upward drift starting at a baseline of 52.485 °C. Alarm limits are 62 °C (alert) and 68 °C (trip). \n  - First breach occurred at 08:39.\n  - First alert limit breach occurred at 08:49 (918 samples over alert, latest 65.235 °C, max 68.529 °C).\n  - First trip level was reached at 09:11.\n  - Hourly averages rose from 52.375 °C (06:00) and 52.602 °C (07:00) to 55.410 °C (08:00), peaking at 64.611 °C (09:00) with an hourly max of 67.879 °C, remaining elevated through 11:00 (avg 63.858 °C, max 67.979 °C).",
+   "t": 4.36
+  },
+  {
+   "type": "agent_start",
+   "agent": "diagnosis_agent",
+   "label": "Diagnosis agent",
+   "t": 6.23
+  },
+  {
+   "type": "tool_call",
+   "agent": "diagnosis_agent",
+   "name": "search_manuals",
+   "args": {
+    "query": "temperature rises to trip limit thermal trips",
+    "machine_id": "CAPPER-01"
+   },
+   "t": 6.23
+  },
+  {
+   "type": "tool_call",
+   "agent": "diagnosis_agent",
+   "name": "get_machine_kpis",
+   "args": {
+    "machine_id": "CAPPER-01"
+   },
+   "t": 6.23
+  },
+  {
+   "type": "tool_result",
+   "agent": "diagnosis_agent",
+   "name": "search_manuals",
+   "preview": "{\"query\": \"temperature rises to trip limit thermal trips\", \"machine_id\": \"CAPPER-01\", \"results\": [{\"source\": \"MNT-102 §2\", \"title\": \"2. Temperature limits\", \"score\": 8.23, \"text\": \"Normal operating temperature is 48 to 56 degC. The alert limit is 62 degC. The thermal protection trips at 68 degC and locks the machine for a 10 minute cool-down.\"}, {\"source\": \"MNT-102 §3\", \"title\": \"3. Cooling fan failure signature\", \"score\": 6.27, \"text\": \"When the cooling fan or its contactor fails, the temperature rises exponentially with a time constant of about 40 minutes toward roughly 76 degC. The thermal protection then trips, the machine cools down, and the pattern repeats about every 25 minutes. Motor current and rejects rise slightly because cap torque becomes less consistent.\"}, {\"source\": \"MNT-102 §5\", \"title\": \"5. Recommended actions\", \"score\": 5.23, \"text\": \"Do not keep resetting the thermal trip. Two or more trips within one hour is a priority 1 event. Check that the fan rotates and that its contactor pulls in. Clean the filter. Replace the 24 V fan if it is faulty. Verify the temperature stays below 62 degC for 15 minutes before releasing the machine to production.\"}]}",
+   "t": 6.26
+  },
+  {
+   "type": "tool_result",
+   "agent": "diagnosis_agent",
+   "name": "get_machine_kpis",
+   "preview": "{\"machine_id\": \"CAPPER-01\", \"availability_pct\": 82.2, \"fault_events\": 5, \"longest_fault_s\": 600, \"fault_s\": 3000.0, \"idle_s\": 730.0, \"clean_s\": 600.0, \"avg_temp_c\": 57.8, \"max_temp_c\": 67.98, \"max_vibration_mm_s\": 1.989, \"max_motor_current_a\": 10.869, \"total_rejects\": 198.1, \"stops_over_1min\": [{\"state\": \"IDLE\", \"from\": \"06:15\", \"minutes\": 2.8}, {\"state\": \"IDLE\", \"from\": \"07:21\", \"minutes\": 2.7}, {\"state\": \"IDLE\", \"from\": \"08:56\", \"minutes\": 3.0}, {\"state\": \"FAULT\", \"from\": \"09:13\", \"minutes\": 10.0}, {\"state\": \"FAULT\", \"from\": \"09:48\", \"minutes\": 10.0}, {\"state\": \"IDLE\", \"from\": \"10:04\", \"minutes\": 3.7}, {\"state\": \"FAULT\", \"from\": \"10:25\", \"minutes\": 10.0}, {\"state\": \"FAULT\", \"from\": \"10:57\", \"minutes\": 10.0}, {\"state\": \"FAULT\", \"from\": \"11:31\", \"minutes\": 10.0}]}",
+   "t": 6.26
+  },
+  {
+   "type": "agent_message",
+   "agent": "diagnosis_agent",
+   "text": "**CAPPER-01 (`temp_c`) Diagnosis:**\n\n* **Most Likely Cause:** Cooling fan or contactor failure [MNT-102 §3]. \n* **Evidence (For):** Temperature rises from baseline (52.5 °C), reaching alert (62 °C) and repeatedly hitting the 68 °C trip limit with recurring 10-minute cool-down lockouts (KPIs show multiple 10-minute fault stops), matching the failure signature [MNT-102 §2, MNT-102 §3].\n* **Alternative Cause:** Instrumentation drift or thermocouple degradation.\n* **Evidence (Against Alternative):** The recurring thermal trips and 10-minute lockouts strongly indicate actual thermal protection activation rather than a static sensor offset.\n* **Confidence:** High.",
+   "t": 7.5
+  },
+  {
+   "type": "agent_start",
+   "agent": "report_agent",
+   "label": "Report agent",
+   "t": 14.18
+  },
+  {
+   "type": "tool_call",
+   "agent": "report_agent",
+   "name": "propose_work_order",
+   "args": {
+    "title": "CAPPER-01 Thermal Protection Trips and Overheating",
+    "evidence": "Temperature baseline of 52.5 °C rose starting at 08:39, reaching alert (62 °C) at 08:49 and hitting the 68 °C trip limit (max 68.529 °C) with recurring 10-minute cool-down lockouts; hourly averages peaked at 64.611 °C at 09:00 and remained elevated through 11:00.",
+    "machine_id": "CAPPER-01",
+    "suspected_cause": "Cooling fan or contactor failure [MNT-102 §3]",
+    "recommended_action": "Inspect the cooling fan and contactor on CAPPER-01 for failure, and verify thermocouple calibration if cooling hardware is intact [MNT-102 §3].",
+    "priority": "P1"
+   },
+   "t": 14.18
+  },
+  {
+   "type": "tool_result",
+   "agent": "report_agent",
+   "name": "propose_work_order",
+   "preview": "{\"status\": \"pending_approval\", \"work_order\": {\"id\": \"WO-65EFBE-1\", \"run_id\": \"65efbec32146\", \"machine_id\": \"CAPPER-01\", \"priority\": \"P1\", \"title\": \"CAPPER-01 Thermal Protection Trips and Overheating\", \"evidence\": \"Temperature baseline of 52.5 °C rose starting at 08:39, reaching alert (62 °C) at 08:49 and hitting the 68 °C trip limit (max 68.529 °C) with recurring 10-minute cool-down lockouts; hourly averages peaked at 64.611 °C at 09:00 and remained elevated through 11:00.\", \"suspected_cause\": \"Cooling fan or contactor failure [MNT-102 §3]\", \"recommended_action\": \"Inspect the cooling fan and contactor on CAPPER-01 for failure, and verify thermocouple calibration if cooling hardware is intact [MNT-102 §3].\", \"status\": \"pending_approval\", \"created_at\": 1794322040.2658386}}",
+   "t": 14.19
+  },
+  {
+   "type": "work_order",
+   "order": {
+    "id": "WO-65EFBE-1",
+    "run_id": "65efbec32146",
+    "machine_id": "CAPPER-01",
+    "priority": "P1",
+    "title": "CAPPER-01 Thermal Protection Trips and Overheating",
+    "evidence": "Temperature baseline of 52.5 °C rose starting at 08:39, reaching alert (62 °C) at 08:49 and hitting the 68 °C trip limit (max 68.529 °C) with recurring 10-minute cool-down lockouts; hourly averages peaked at 64.611 °C at 09:00 and remained elevated through 11:00.",
+    "suspected_cause": "Cooling fan or contactor failure [MNT-102 §3]",
+    "recommended_action": "Inspect the cooling fan and contactor on CAPPER-01 for failure, and verify thermocouple calibration if cooling hardware is intact [MNT-102 §3].",
+    "status": "pending_approval",
+    "created_at": 1794322040.2658386
+   },
+   "t": 14.19
+  },
+  {
+   "type": "agent_message",
+   "agent": "report_agent",
+   "text": "## Summary\nCAPPER-01 experienced a critical thermal anomaly with repeated trips above the 68 °C limit, while FILLER-01, LABELER-01, and PACKER-01 remained healthy. A maintenance work order has been proposed to inspect the cooling system.\n\n## Findings\n| Machine | Issue | Priority | Confidence |\n| :--- | :--- | :--- | :--- |\n| CAPPER-01 | Temperature (`temp_c`) exceeded alert (62 °C) and trip (68 °C) limits with recurring 10-minute cool-down lockouts. | P1 | High |\n\n## Recommended actions\n1. Review and approve the proposed work order for CAPPER-01.\n2. Inspect the cooling fan and contactor on CAPPER-01 for hardware failure.\n3. Verify thermocouple calibration and sensor integrity if cooling hardware operates correctly.\n\n## Notes\nThe diagnosis is supported by recurring thermal trips and lockouts, indicating actual thermal protection activation rather than static sensor offset. Follow-up checks should confirm cooling circuit continuity.",
+   "t": 20.13
+  },
+  {
+   "type": "final",
+   "report": "## Summary\nCAPPER-01 experienced a critical thermal anomaly with repeated trips above the 68 °C limit, while FILLER-01, LABELER-01, and PACKER-01 remained healthy. A maintenance work order has been proposed to inspect the cooling system.\n\n## Findings\n| Machine | Issue | Priority | Confidence |\n| :--- | :--- | :--- | :--- |\n| CAPPER-01 | Temperature (`temp_c`) exceeded alert (62 °C) and trip (68 °C) limits with recurring 10-minute cool-down lockouts. | P1 | High |\n\n## Recommended actions\n1. Review and approve the proposed work order for CAPPER-01.\n2. Inspect the cooling fan and contactor on CAPPER-01 for hardware failure.\n3. Verify thermocouple calibration and sensor integrity if cooling hardware operates correctly.\n\n## Notes\nThe diagnosis is supported by recurring thermal trips and lockouts, indicating actual thermal protection activation rather than static sensor offset. Follow-up checks should confirm cooling circuit continuity.",
+   "usage": {
+    "prompt_tokens": 9419,
+    "output_tokens": 1033,
+    "total_tokens": 10452,
+    "llm_calls": 7,
+    "est_cost_usd": 0.0,
+    "by_agent": {
+     "detection_agent": {
+      "prompt_tokens": 2655,
+      "output_tokens": 345,
+      "llm_calls": 3
+     },
+     "diagnosis_agent": {
+      "prompt_tokens": 3510,
+      "output_tokens": 237,
+      "llm_calls": 2
+     },
+     "report_agent": {
+      "prompt_tokens": 3254,
+      "output_tokens": 451,
+      "llm_calls": 2
+     }
+    }
+   },
+   "duration_s": 20.13,
+   "t": 20.13
+  }
+ ]
+}
