@@ -55,10 +55,14 @@ Review each `app/replays/*.json` recording in the UI (start `uvicorn …` and se
 Visitors receive these recordings instantly and at no cost; live runs are optional.
 
 ### 4. Publish on GitHub [MANUAL]
-Create a **public** repository named `plant-ops-copilot`, then run:
+Create a **public** repository named `plant-ops-copilot`, then run these commands one at a time (PowerShell 5.1 does not support `&&`):
 ```bash
-git init && git add . && git commit -m "Plant Ops Copilot" && git branch -M main
-git remote add origin https://github.com/<github-user>/plant-ops-copilot.git && git push -u origin main
+git init
+git add .
+git commit -m "Plant Ops Copilot"
+git branch -M main
+git remote add origin https://github.com/<github-user>/plant-ops-copilot.git
+git push -u origin main
 ```
 Confirm that `git status` does not list `.env` (it is git-ignored). The Actions tab then runs the tests and publishes the image to
 `ghcr.io/<github-user>/plant-ops-copilot`. When the workflow is green, open GitHub profile → Packages → the package →
@@ -71,7 +75,7 @@ Add `LOCATION=<region from preflight>` and `IMAGE=ghcr.io/<github-user, lower ca
 az login
 bash infra/deploy.sh
 ```
-The script prints the site URL. Add it to the résumé, LinkedIn and the GitHub repository description.
+The script prints the site URL. Add it to LinkedIn and the GitHub repository description. A custom domain requires a standard (workload profiles) environment; express environments do not support one.
 After pushing new code, wait for the Action to finish and run `bash infra/deploy.sh` again.
 
 ### 6. Safeguards [MANUAL]

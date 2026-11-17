@@ -22,7 +22,3 @@ OPC UA server (sim) ─► collector ─► parquet ─► dbt (DuckDB: staging 
 ## Known limitations
 Simulated data and fictional manuals; one line with four machines; no authentication and no persistence of work orders;
 the Azure/LiteLLM path needs a first-run check; not a production OT security design.
-
-## Résumé bullets (use only after the demo is live and the claims are verified)
-- Built and deployed *Plant Ops Copilot*: multi-agent (Google ADK) anomaly triage for a simulated bottling line, with OPC UA ingestion, dbt/DuckDB models and manual-grounded root-cause analysis with citations.
-- Cost-controlled hosting on Azure Container Apps (scale-to-zero, GHCR, usage guards, replay-first demo).
