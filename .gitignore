@@ -12,3 +12,5 @@ dbt_project/logs/
 logs/
 *.log
 .DS_Store
+
+frontend/node_modules/

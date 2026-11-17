@@ -12,7 +12,13 @@ The first visit after an idle period takes a few seconds while the container sta
 
 ## Usage
 Select a scenario (healthy, bearing wear, overheating, sensor fault), then choose **Replay** (free, instant)
-or **Run live** (real model call, rate-limited).
+or **Run live** (real model call, rate-limited). The interface offers English and German, light and dark themes,
+a 3D view of the line with a 2D fallback, a guided tour and a presentation mode.
+
+The language applies to the agents as well: the language is part of the agent instructions, so the agents write
+their findings, the report and the work-order text in the selected language from the start. Nothing is translated
+afterwards. Recorded replays exist per language (`app/replays/<scenario>.json` and `<scenario>.de.json`); a missing
+German recording falls back to the English one with a visible notice.
 
 ## Screenshots
 | Line data (computed live, no LLM) | Agent trace (tool calls, citations) |
@@ -22,6 +28,11 @@ or **Run live** (real model call, rate-limited).
 | Report and proposed work order | Mobile |
 |---|---|
 | ![Report and work order](docs/img/04-report-and-work-order.png) | <img src="docs/img/05-mobile.png" width="260" alt="Mobile view"> |
+
+## Front end
+Plain JavaScript and CSS without a framework. The 3D scene (`app/static/scene.js`, about 130 KB compressed) loads after
+the page is usable and is built from `frontend/scene.src.js` with `npm run build` in `frontend/`. Strings live in
+`app/static/i18n.js`. The browser check `python -m scripts.e2e_ui <url>` covers both languages, both themes, desktop and mobile.
 
 ## Run locally
 ```bash

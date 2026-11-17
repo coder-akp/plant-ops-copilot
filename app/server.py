@@ -9,6 +9,7 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.gzip import GZipMiddleware
 from pydantic import BaseModel, Field
 
 from app import data, detect, workorders
@@ -16,6 +17,7 @@ from app.config import Settings
 from app.guard import UsageGuard
 from app.runner import investigate
 from app.tools import clear_caches, scan_for_scenario
+from app.agents import LANGUAGES
 from sim.line import MACHINES, SCENARIOS
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -26,6 +28,7 @@ _SAFE_ID = re.compile(r"^[a-z0-9_\-]{1,40}$")
 class InvestigateBody(BaseModel):
     scenario: str = Field(max_length=40)
     code: str | None = Field(default=None, max_length=100)
+    lang: str = Field(default="en", pattern="^(en|de)$")
 
 
 class ApproveBody(BaseModel):
@@ -71,6 +74,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["X-Frame-Options"] = "DENY"
+        path = request.url.path
+        if request.method == "GET" and (path.startswith("/api/scenarios") or path.startswith("/api/replay")):
+            response.headers.setdefault("Cache-Control", "public, max-age=300")
+        elif path.startswith("/static/"):
+            response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=86400"
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; "
             "base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
@@ -82,8 +90,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise HTTPException(404, "unknown scenario")
         return sid
 
-    def replay_path(sid: str) -> Path:
-        return settings.replay_dir / f"{sid}.json"
+    def replay_path(sid: str, lang: str = "en") -> Path:
+        return settings.replay_dir / (f"{sid}.json" if lang == "en" else f"{sid}.{lang}.json")
 
     # Pages
     @app.get("/", include_in_schema=False)
@@ -126,6 +134,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 "story": meta.story if meta else "",
                 "ground_truth": meta.ground_truth if meta else "",
                 "has_replay": replay_path(sid).is_file(),
+                "replay_langs": [lg for lg in LANGUAGES if replay_path(sid, lg).is_file()],
             })
         return out
 
@@ -152,12 +161,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return payload
 
     @app.get("/api/replay/{sid}")
-    def replay(sid: str) -> JSONResponse:
+    def replay(sid: str, lang: str = "en") -> JSONResponse:
+        """Recorded run in the requested language; falls back to English if that recording does not exist yet."""
         check_scenario(sid)
-        path = replay_path(sid)
+        if lang not in LANGUAGES:
+            raise HTTPException(400, "unsupported language")
+        path = replay_path(sid, lang)
+        if not path.is_file():
+            path = replay_path(sid)
         if not path.is_file():
             raise HTTPException(404, "no recorded run for this scenario")
-        return JSONResponse(json.loads(path.read_text(encoding="utf-8")))
+        rec = json.loads(path.read_text(encoding="utf-8"))
+        rec.setdefault("meta", {}).setdefault("language", "en")
+        return JSONResponse(rec)
 
     @app.post("/api/investigate")
     async def investigate_endpoint(body: InvestigateBody, request: Request):
@@ -169,7 +185,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         async def stream():
             meter: dict[str, int] = {"prompt_tokens": 0, "output_tokens": 0}
             try:
-                async for event in investigate(sid, settings, meter=meter):
+                async for event in investigate(sid, settings, meter=meter, language=body.lang):
                     yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
             finally:
                 guard.release(settings.estimate_cost(meter["prompt_tokens"], meter["output_tokens"]))
@@ -187,6 +203,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return {"status": "approved", "simulated": True, "order_id": body.order_id}
         return {"status": wo.status, "simulated": False, "order_id": wo.id}
 
-    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+    app.mount("/static", GZipMiddleware(StaticFiles(directory=STATIC_DIR), minimum_size=1024), name="static")
     return app
 

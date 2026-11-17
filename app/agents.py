@@ -17,6 +17,9 @@ from app.config import Settings
 from app.llm import generation_config
 from app.tools import DETECTION_TOOLS, DIAGNOSIS_TOOLS, REPORT_TOOLS
 
+LANGUAGES = ("en", "de")
+DEFAULT_LANGUAGE = "en"
+
 AGENT_LABELS = {
     "detection_agent": "Detection agent",
     "diagnosis_agent": "Diagnosis agent",
@@ -79,7 +82,40 @@ If the line is healthy, write a short report saying no action is required and do
 Use only facts from the findings and diagnosis above."""
 
 
-def build_pipeline(model, settings: Settings) -> SequentialAgent:
+GERMAN_RULES = """
+
+Language: German (de). Write every sentence of your answer in German, in a professional technical register. Keep unchanged: machine identifiers, tool names and arguments, citation tags such as [MNT-101 §3], numbers, units, clock times and the priority codes P1 to P4."""
+
+GERMAN_SEARCH_RULE = """
+The maintenance manuals are written in English. Therefore always write the search_manuals query in English, but write your answer in German."""
+
+GERMAN_WORK_ORDER_RULE = """
+Write the text fields of propose_work_order (title, evidence, suspected_cause, recommended_action) in German as well."""
+
+
+def localize_instruction(kind: str, text: str, language: str) -> str:
+    """Return the agent instruction for the requested output language.
+
+    The language is fixed when the pipeline is built, so every agent writes in the target
+    language from the start and nothing is translated after the fact.
+    """
+    if language == "en":
+        return text
+    if language != "de":
+        raise ValueError(f"unsupported language: {language}")
+    if kind == "diagnosis":
+        text = text.replace("No diagnosis needed.", "Keine Diagnose erforderlich.")
+        return text + GERMAN_RULES + GERMAN_SEARCH_RULE
+    if kind == "report":
+        for en, de in (("## Summary", "## Zusammenfassung"), ("## Findings", "## Befunde"),
+                       ("## Recommended actions", "## Empfohlene Maßnahmen"), ("## Notes", "## Hinweise"),
+                       ("Machine, Issue, Priority, Confidence", "Maschine, Problem, Priorität, Konfidenz")):
+            text = text.replace(en, de)
+        return text + GERMAN_RULES + GERMAN_WORK_ORDER_RULE
+    return text + GERMAN_RULES
+
+
+def build_pipeline(model, settings: Settings, language: str = DEFAULT_LANGUAGE) -> SequentialAgent:
     """Build a new agent tree. A separate tree is created for each run."""
     config = generation_config(settings)
 
@@ -87,7 +123,7 @@ def build_pipeline(model, settings: Settings) -> SequentialAgent:
         name="detection_agent",
         model=model,
         description="Finds and quantifies anomalies in the shift data.",
-        instruction=DETECTION_INSTRUCTION,
+        instruction=localize_instruction("detection", DETECTION_INSTRUCTION, language),
         tools=DETECTION_TOOLS,
         output_key="detection_findings",
         generate_content_config=config,
@@ -96,7 +132,7 @@ def build_pipeline(model, settings: Settings) -> SequentialAgent:
         name="diagnosis_agent",
         model=model,
         description="Explains likely root causes using the maintenance manuals.",
-        instruction=DIAGNOSIS_INSTRUCTION,
+        instruction=localize_instruction("diagnosis", DIAGNOSIS_INSTRUCTION, language),
         tools=DIAGNOSIS_TOOLS,
         output_key="diagnosis",
         include_contents="none",
@@ -106,7 +142,7 @@ def build_pipeline(model, settings: Settings) -> SequentialAgent:
         name="report_agent",
         model=model,
         description="Writes the handover report and proposes work orders.",
-        instruction=REPORT_INSTRUCTION,
+        instruction=localize_instruction("report", REPORT_INSTRUCTION, language),
         tools=REPORT_TOOLS,
         output_key="shift_report",
         include_contents="none",

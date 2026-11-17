@@ -19,7 +19,7 @@ from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
 
-from app.agents import AGENT_LABELS, build_pipeline
+from app.agents import AGENT_LABELS, DEFAULT_LANGUAGE, build_pipeline
 from app.config import Settings
 from app.llm import build_model
 
@@ -57,11 +57,12 @@ def _friendly_error(exc: BaseException) -> str:
 
 
 async def investigate(scenario_id: str, settings: Settings, run_id: str | None = None,
-                      meter: dict[str, int] | None = None) -> AsyncIterator[dict[str, Any]]:
+                      meter: dict[str, int] | None = None, language: str = DEFAULT_LANGUAGE) -> AsyncIterator[dict[str, Any]]:
     """Run the pipeline for one scenario and yield events as dicts.
 
     The optional ``meter`` is updated after every model call, so the caller can account
-    for the tokens used even if the consumer disconnects mid-run.
+    for the tokens used even if the consumer disconnects mid-run. ``language`` ("en" or "de")
+    is the language the agents write in; it is part of the agent instructions from the start.
     """
     run_id = run_id or uuid.uuid4().hex[:12]
     started = time.monotonic()
@@ -72,7 +73,7 @@ async def investigate(scenario_id: str, settings: Settings, run_id: str | None =
         return ev
 
     yield stamp({"type": "run_start", "run_id": run_id, "scenario": scenario_id,
-                 "provider": settings.provider, "model": settings.model_label})
+                 "provider": settings.provider, "model": settings.model_label, "language": language})
 
     prompt_tokens = output_tokens = llm_calls = tool_calls = 0
     by_agent: dict[str, dict[str, int]] = {}
@@ -93,7 +94,7 @@ async def investigate(scenario_id: str, settings: Settings, run_id: str | None =
     agen = None
     try:
         model = build_model(settings)
-        pipeline = build_pipeline(model, settings)
+        pipeline = build_pipeline(model, settings, language)
         sessions = InMemorySessionService()
         await sessions.create_session(
             app_name=APP_NAME, user_id="web", session_id=run_id,

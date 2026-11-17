@@ -21,6 +21,11 @@ from google.genai import types
 
 TAG = "[scripted] "
 _FINDING_RE = re.compile(r"- ((?:FILLER|CAPPER|LABELER|PACKER)-01) (\w+)")
+_HEALTHY_RE = re.compile(r"no anomalies detected|looks healthy|keine auffälligkeiten erkannt")
+
+
+def _is_german(instruction: str) -> bool:
+    return "Language: German (de)" in instruction
 
 
 def _first_finding(text: str) -> tuple[str, str]:
@@ -78,23 +83,26 @@ class ScriptedLlm(BaseLlm):
     async def generate_content_async(self, llm_request: LlmRequest, stream: bool = False) -> AsyncGenerator[LlmResponse, None]:
         text = _instruction_text(llm_request)
         done = _function_responses(llm_request)
+        de = _is_german(text)
         if "Detection Agent" in text:
-            resp = self._detection(done)
+            resp = self._detection(done, de)
         elif "Diagnosis Agent" in text:
-            resp = self._diagnosis(text, done)
+            resp = self._diagnosis(text, done, de)
         elif "Report Agent" in text:
-            resp = self._report(text, done)
+            resp = self._report(text, done, de)
         else:
             resp = _text("Hello from the scripted model.")
         yield _with_usage(resp, llm_request)
 
     @staticmethod
-    def _detection(done: dict[str, Any]) -> LlmResponse:
+    def _detection(done: dict[str, Any], de: bool = False) -> LlmResponse:
         scan = done.get("scan_line")
         if scan is None:
             return _call("scan_line", {})
         findings = scan.get("findings", [])
         if not findings:
+            if de:
+                return _text("Keine Auffälligkeiten erkannt. Die Anlage läuft normal: Alle Maschinen bleiben innerhalb ihrer Basislinie und Alarmgrenzen.")
             return _text("No anomalies detected. The line looks healthy: all machines stay within their baseline and alarm limits.")
         top = findings[0]
         if "get_signal_trend" not in done:
@@ -107,13 +115,13 @@ class ScriptedLlm(BaseLlm):
                 "missing_minutes", "dropout_from", "dropout_to", "baseline", "latest", "max", "alert_limit", "trip_limit",
                 "hours_to_alert_at_current_trend"}]
             lines.append(f"- {f['machine_id']} {f['signal']} (severity {f['severity']}): {', '.join(f['issues'])}; " + ", ".join(bits))
-        return _text("Findings:\n" + "\n".join(lines))
+        return _text(("Befunde:\n" if de else "Findings:\n") + "\n".join(lines))
 
     @staticmethod
-    def _diagnosis(instruction: str, done: dict[str, Any]) -> LlmResponse:
+    def _diagnosis(instruction: str, done: dict[str, Any], de: bool = False) -> LlmResponse:
         low = instruction.lower()
-        if "no anomalies detected" in low or "looks healthy" in low:
-            return _text("No diagnosis needed.")
+        if _HEALTHY_RE.search(low):
+            return _text("Keine Diagnose erforderlich." if de else "No diagnosis needed.")
         machine, signal = _first_finding(instruction)
         if "search_manuals" not in done:
             if "stuck_sensor" in low or "signal_dropout" in low:
@@ -128,15 +136,22 @@ class ScriptedLlm(BaseLlm):
         results = done["search_manuals"].get("results", [])
         cites = ", ".join(f"[{r['source']}]" for r in results[:2]) or "[no source]"
         kpi = done["get_machine_kpis"]
+        if de:
+            return _text(
+                f"Wahrscheinlichste Ursache für {machine}: siehe {cites}. "
+                f"Verfügbarkeit {kpi.get('availability_pct')} %, {kpi.get('fault_events')} Störungen. Konfidenz: mittel."
+            )
         return _text(
             f"Most likely cause for {machine}: see {cites}. "
             f"Availability {kpi.get('availability_pct')} %, {kpi.get('fault_events')} fault events. Confidence: medium."
         )
 
     @staticmethod
-    def _report(instruction: str, done: dict[str, Any]) -> LlmResponse:
+    def _report(instruction: str, done: dict[str, Any], de: bool = False) -> LlmResponse:
         low = instruction.lower()
-        healthy = "no anomalies detected" in low or "looks healthy" in low
+        healthy = bool(_HEALTHY_RE.search(low))
+        if healthy and de:
+            return _text("## Zusammenfassung\nKein Handlungsbedarf. Alle Maschinen liegen innerhalb der Grenzwerte.\n\n## Befunde\n| Maschine | Problem | Priorität | Konfidenz |\n|---|---|---|---|\n| keine | keine | P4 | hoch |\n\n## Empfohlene Maßnahmen\n1. Normalbetrieb fortsetzen.\n\n## Hinweise\nSkriptgesteuerte Ausgabe für Offline-Tests.")
         if healthy:
             return _text("## Summary\nNo action required. All machines are within limits.\n\n## Findings\n| Machine | Issue | Priority | Confidence |\n|---|---|---|---|\n| none | none | P4 | high |\n\n## Recommended actions\n1. Continue normal operation.\n\n## Notes\nScripted output for offline testing.")
         machine, _ = _first_finding(instruction)
@@ -144,12 +159,19 @@ class ScriptedLlm(BaseLlm):
             return _call("propose_work_order", {
                 "machine_id": machine,
                 "priority": "P2",
-                "title": f"Inspect {machine}",
-                "evidence": "See detection findings above.",
-                "suspected_cause": "See diagnosis above.",
-                "recommended_action": "Inspect at next planned stop.",
+                "title": f"{machine} prüfen" if de else f"Inspect {machine}",
+                "evidence": "Siehe Befunde oben." if de else "See detection findings above.",
+                "suspected_cause": "Siehe Diagnose oben." if de else "See diagnosis above.",
+                "recommended_action": "Beim nächsten planmäßigen Stopp prüfen." if de else "Inspect at next planned stop.",
             })
         wo = done["propose_work_order"].get("work_order", {})
+        if de:
+            return _text(
+                f"## Zusammenfassung\nAuf {machine} wurde eine Auffälligkeit gefunden. Ein Arbeitsauftrag wurde vorgeschlagen und wartet auf Freigabe.\n\n"
+                f"## Befunde\n| Maschine | Problem | Priorität | Konfidenz |\n|---|---|---|---|\n| {machine} | siehe Erkennung | {wo.get('priority', 'P2')} | mittel |\n\n"
+                f"## Empfohlene Maßnahmen\n1. Arbeitsauftrag {wo.get('id', '')} freigeben und {machine} prüfen.\n\n"
+                "## Hinweise\nSkriptgesteuerte Ausgabe für Offline-Tests; keine echte Modellausgabe."
+            )
         return _text(
             f"## Summary\nAn anomaly was found on {machine}. A work order was proposed and awaits approval.\n\n"
             f"## Findings\n| Machine | Issue | Priority | Confidence |\n|---|---|---|---|\n| {machine} | see detection | {wo.get('priority', 'P2')} | medium |\n\n"

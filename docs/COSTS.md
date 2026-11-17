@@ -19,3 +19,6 @@ budget alert and (3) the kill switch. A student subscription has no payment card
 The per-run cost is an estimate (roughly cents on a small model) and has not been measured with a real model. The UI shows the
 running estimate and `scripts/record_replays.py` prints actual token counts, so a single measurement allows
 `PRICE_IN_PER_M` / `PRICE_OUT_PER_M` to be set accurately. Azure prices were not verified against the live pricing page and should be confirmed there.
+
+## Recordings in two languages
+Recording all replays takes 8 runs (4 scenarios, English and German). On the Gemini free tier this costs nothing; on a paid model it is about twice the cost of an English-only recording. Visitors replay the recordings at no cost.

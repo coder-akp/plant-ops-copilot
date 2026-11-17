@@ -49,8 +49,9 @@ Mock output must never be published as a demo; the recorder refuses to save it.
 
 ### 3. Record the replays (small cost, free on the Gemini tier) [MANUAL]
 ```bash
-python -m scripts.record_replays
+python -m scripts.record_replays --pause 25
 ```
+The command records every scenario in English and in German (8 runs). The pause avoids free-tier rate limits. Use `--lang de` to add only the German recordings.
 Review each `app/replays/*.json` recording in the UI (start `uvicorn …` and select Replay). Re-record a scenario if its report is poor.
 Visitors receive these recordings instantly and at no cost; live runs are optional.
 

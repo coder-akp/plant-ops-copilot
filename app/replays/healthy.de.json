@@ -1,0 +1,124 @@
+{
+ "meta": {
+  "scenario": "healthy",
+  "provider": "gemini",
+  "model": "gemini-3.5-flash-lite",
+  "language": "de",
+  "recorded_at": "2026-11-17",
+  "usage": {
+   "prompt_tokens": 3420,
+   "output_tokens": 378,
+   "total_tokens": 3798,
+   "llm_calls": 4,
+   "est_cost_usd": 0.0,
+   "by_agent": {
+    "detection_agent": {
+     "prompt_tokens": 1399,
+     "output_tokens": 116,
+     "llm_calls": 2
+    },
+    "diagnosis_agent": {
+     "prompt_tokens": 1089,
+     "output_tokens": 5,
+     "llm_calls": 1
+    },
+    "report_agent": {
+     "prompt_tokens": 932,
+     "output_tokens": 257,
+     "llm_calls": 1
+    }
+   }
+  }
+ },
+ "events": [
+  {
+   "type": "run_start",
+   "run_id": "5b2f92f3c090",
+   "scenario": "healthy",
+   "provider": "gemini",
+   "model": "gemini-3.5-flash-lite",
+   "language": "de",
+   "t": 0.0
+  },
+  {
+   "type": "agent_start",
+   "agent": "detection_agent",
+   "label": "Detection agent",
+   "t": 11.75
+  },
+  {
+   "type": "tool_call",
+   "agent": "detection_agent",
+   "name": "scan_line",
+   "args": {},
+   "t": 11.75
+  },
+  {
+   "type": "tool_result",
+   "agent": "detection_agent",
+   "name": "scan_line",
+   "preview": "{\"window\": {\"start\": \"2026-03-02T06:00:00\", \"end\": \"2026-03-02T11:59:50\", \"baseline_until\": \"07:29\"}, \"method\": \"robust z-score vs first-quarter baseline (10 min rolling median), alarm limits, flatline/dropout checks, IsolationForest per machine\", \"findings\": [], \"machines_without_findings\": [\"CAPPER-01\", \"FILLER-01\", \"LABELER-01\", \"PACKER-01\"]}",
+   "t": 13.75
+  },
+  {
+   "type": "agent_message",
+   "agent": "detection_agent",
+   "text": "Die Abfüllinie zeigt sich im aktuellen Schichtverlauf vollständig intakten. Die automatisierte Überprüfung mittels scan_line ergab keine Anomalien für die Maschinen FILLER-01, CAPPER-01, LABELER-01 und PACKER-01. Es wurden weder Basislinien-Drifts, feststeckende Sensoren, Signalabbrüche noch Grenzwertüberschreitungen detektiert. Die Linie verhält sich in allen Parametern unauffällig und normal.",
+   "t": 20.4
+  },
+  {
+   "type": "agent_start",
+   "agent": "diagnosis_agent",
+   "label": "Diagnosis agent",
+   "t": 28.38
+  },
+  {
+   "type": "agent_message",
+   "agent": "diagnosis_agent",
+   "text": "Keine Diagnose erforderlich.",
+   "t": 28.38
+  },
+  {
+   "type": "agent_start",
+   "agent": "report_agent",
+   "label": "Report agent",
+   "t": 36.67
+  },
+  {
+   "type": "agent_message",
+   "agent": "report_agent",
+   "text": "## Zusammenfassung\nDie automatisierte Überprüfung der Abfüllinie ergab während des aktuellen Schichtverlaufs keine Anomalien oder Grenzwertüberschreitungen an den Maschinen FILLER-01, CAPPER-01, LABELER-01 und PACKER-01. Alle Parameter verhalten sich unauffällig und normal, sodass keine Instandhaltungsmaßnahmen erforderlich sind.\n\n## Befunde\n| Maschine | Problem | Priorität | Konfidenz |\n| :--- | :--- | :--- | :--- |\n| FILLER-01 | Keine Anomalien detektiert | P4 | Hoch |\n| CAPPER-01 | Keine Anomalien detektiert | P4 | Hoch |\n| LABELER-01 | Keine Anomalien detektiert | P4 | Hoch |\n| PACKER-01 | Keine Anomalien detektiert | P4 | Hoch |\n\n## Empfohlene Maßnahmen\n1. Fortführung der regulären Linienüberwachung im Rahmen des Standardbetriebs.\n\n## Hinweise\nEs liegen keine Einschränkungen oder Hinweise auf ausstehende Folgeprüfungen vor. Die Anlage befindet sich in einem einwandfreien Zustand.",
+   "t": 36.67
+  },
+  {
+   "type": "final",
+   "report": "## Zusammenfassung\nDie automatisierte Überprüfung der Abfüllinie ergab während des aktuellen Schichtverlaufs keine Anomalien oder Grenzwertüberschreitungen an den Maschinen FILLER-01, CAPPER-01, LABELER-01 und PACKER-01. Alle Parameter verhalten sich unauffällig und normal, sodass keine Instandhaltungsmaßnahmen erforderlich sind.\n\n## Befunde\n| Maschine | Problem | Priorität | Konfidenz |\n| :--- | :--- | :--- | :--- |\n| FILLER-01 | Keine Anomalien detektiert | P4 | Hoch |\n| CAPPER-01 | Keine Anomalien detektiert | P4 | Hoch |\n| LABELER-01 | Keine Anomalien detektiert | P4 | Hoch |\n| PACKER-01 | Keine Anomalien detektiert | P4 | Hoch |\n\n## Empfohlene Maßnahmen\n1. Fortführung der regulären Linienüberwachung im Rahmen des Standardbetriebs.\n\n## Hinweise\nEs liegen keine Einschränkungen oder Hinweise auf ausstehende Folgeprüfungen vor. Die Anlage befindet sich in einem einwandfreien Zustand.",
+   "usage": {
+    "prompt_tokens": 3420,
+    "output_tokens": 378,
+    "total_tokens": 3798,
+    "llm_calls": 4,
+    "est_cost_usd": 0.0,
+    "by_agent": {
+     "detection_agent": {
+      "prompt_tokens": 1399,
+      "output_tokens": 116,
+      "llm_calls": 2
+     },
+     "diagnosis_agent": {
+      "prompt_tokens": 1089,
+      "output_tokens": 5,
+      "llm_calls": 1
+     },
+     "report_agent": {
+      "prompt_tokens": 932,
+      "output_tokens": 257,
+      "llm_calls": 1
+     }
+    }
+   },
+   "duration_s": 36.67,
+   "t": 36.67
+  }
+ ]
+}

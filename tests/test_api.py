@@ -92,3 +92,25 @@ def test_bad_input_is_rejected(client):
     assert client.post("/api/investigate", json={"scenario": "../../etc"}).status_code == 404
     assert client.post("/api/investigate", json={}).status_code == 422
     assert client.post("/api/investigate", json={"scenario": "x" * 500}).status_code == 422
+
+
+def test_replay_language_with_english_fallback(db, tmp_path):
+    (tmp_path / "healthy.json").write_text(json.dumps({"meta": {"model": "en-rec"}, "events": [{"type": "final", "t": 0}]}))
+    (tmp_path / "healthy.de.json").write_text(json.dumps({"meta": {"model": "de-rec", "language": "de"}, "events": [{"type": "final", "t": 0}]}))
+    (tmp_path / "overheating.json").write_text(json.dumps({"meta": {"model": "en-only"}, "events": [{"type": "final", "t": 0}]}))
+    settings = Settings(db_path=db, provider="mock", replay_dir=tmp_path, cooldown_s=0)
+    with TestClient(create_app(settings)) as c:
+        assert c.get("/api/replay/healthy", params={"lang": "de"}).json()["meta"]["model"] == "de-rec"
+        assert c.get("/api/replay/healthy").json()["meta"]["language"] == "en"
+        fallback = c.get("/api/replay/overheating", params={"lang": "de"}).json()["meta"]
+        assert fallback["model"] == "en-only" and fallback["language"] == "en"
+        assert c.get("/api/replay/healthy", params={"lang": "fr"}).status_code == 400
+        langs = {s["id"]: s["replay_langs"] for s in c.get("/api/scenarios").json()}
+        assert langs["healthy"] == ["en", "de"] and langs["overheating"] == ["en"] and langs["bearing_wear"] == []
+
+
+def test_live_run_in_german_and_language_validation(client):
+    with client.stream("POST", "/api/investigate", json={"scenario": "bearing_wear", "lang": "de"}) as r:
+        events = sse(r)
+    assert events[0]["language"] == "de" and "## Zusammenfassung" in events[-1]["report"]
+    assert client.post("/api/investigate", json={"scenario": "bearing_wear", "lang": "fr"}).status_code == 422

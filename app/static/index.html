@@ -1,140 +1,189 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0f16">
   <title>Plant Ops Copilot</title>
   <meta name="description" content="Multi-agent anomaly triage for a simulated bottling line, built with Google ADK, DuckDB, dbt and Azure.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230a62c4'/%3E%3Cpath d='M16 6l9 10-9 10-9-10z' fill='white'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="/static/app.css">
 </head>
 <body>
+  <a class="skip" href="#stage" data-i18n="skip">Skip to the demo</a>
   <header class="top">
     <div class="brand"><span class="logo">&#9670;</span> Plant Ops Copilot</div>
-    <nav aria-label="Sections">
-      <a href="#scenarios">Scenarios</a>
-      <a href="#data">Line data</a>
-      <a href="#agents">Agents</a>
-      <a href="#how">How it works</a>
+    <nav data-i18n-aria="navAria">
+      <a href="#stage" data-i18n="navDemo">Demo</a>
+      <a href="#agents" data-i18n="navTrace">Trace</a>
+      <a href="#data" data-i18n="navData">Line data</a>
+      <a href="#how" data-i18n="navHow">How it works</a>
       <a id="gh" href="#" hidden rel="noopener">GitHub</a>
     </nav>
-    <div id="statusPill" class="pill">loading&hellip;</div>
+    <div class="top-right">
+      <div id="statusPill" class="pill">&hellip;</div>
+      <button class="icon-btn txt" id="btnLang" type="button" data-i18n-tip="tipLang" aria-label="Language">DE</button>
+      <button class="icon-btn" id="btnPresent" type="button" data-i18n-tip="tipPresent" data-i18n-aria="tipPresent">&#9974;</button>
+      <button class="icon-btn" id="btnTheme" type="button" data-i18n-tip="tipTheme" data-i18n-aria="tipTheme">&#9790;</button>
+    </div>
   </header>
 
   <main>
-    <section class="hero">
-      <h1>Multi-agent triage for a simulated bottling line</h1>
-      <p>Four machines, six hours of 10-second sensor data, at most one injected fault. Three AI agents detect the problem, look up the likely root cause in maintenance manuals and write the shift handover report. A human approves the work order. All data is synthetic.</p>
-      <ol class="steps">
-        <li>Pick a shift</li>
-        <li>Explore the data (computed live, no AI involved)</li>
-        <li>Run the agents and watch them work</li>
-      </ol>
-    </section>
-
-    <section class="card" id="scenarios">
-      <h2>1 &middot; Choose a shift</h2>
-      <div id="scenarioCards" class="cards" role="group" aria-label="Scenarios"></div>
+    <section class="hero" id="hero">
+      <div class="hero-text">
+        <h1 data-i18n="h1">Multi-agent triage for a simulated bottling line</h1>
+        <p data-i18n="heroP">Four machines, six hours of 10-second sensor data, at most one injected fault. Three AI agents detect the problem, look up the likely root cause in maintenance manuals and write the shift handover report. A person approves the work order. All data is synthetic.</p>
+      </div>
+      <div class="tabs-row">
+        <div id="scenarioCards" class="scn-tabs" role="group" data-i18n-aria="scnAria"></div>
+        <button class="btn ghost" id="btnTour" type="button" data-i18n-tip="tipTour">&#9654; Guided tour</button>
+      </div>
       <details class="truth" id="truth">
-        <summary>Reveal what was injected (spoiler)</summary>
+        <summary data-i18n="spoiler">Reveal what was injected (spoiler)</summary>
         <p id="truthText"></p>
       </details>
     </section>
 
-    <section class="card" id="data">
-      <h2>2 &middot; Line data <span class="tag">live computation &middot; no LLM</span></h2>
-      <div id="findings" class="chips" aria-live="polite"></div>
-      <div class="controls">
-        <label>Machine <select id="machineSel" aria-label="Machine"></select></label>
-        <label>Signal <select id="signalSel" aria-label="Signal"></select></label>
+    <section class="stage" id="stage" aria-label="Live demo">
+      <div class="scene-card">
+        <div class="kpi-ribbon" id="kpiRibbon" aria-live="polite"></div>
+        <div class="scene" id="scene">
+          <div class="scene3d" id="scene3d"></div>
+          <div class="flat" id="flat" data-i18n-aria="lineStatus"></div>
+          <div class="scene-tools">
+            <button class="chip-btn" id="btnReset" type="button" hidden data-i18n="reset">Reset view</button>
+            <button class="chip-btn" id="btnOrbit" type="button" hidden aria-pressed="false" data-i18n="rotate">Rotate</button>
+          </div>
+          <div class="scene-legend"><span><i class="d ok"></i><b data-i18n="legNormal">Normal</b></span><span><i class="d watch"></i><b data-i18n="legWatch">Watch</b></span><span><i class="d alert"></i><b data-i18n="legAlert">Alert</b></span></div>
+          <div class="m-tip" id="mtip" role="tooltip" hidden></div>
+          <div class="caption" id="caption" hidden></div>
+        </div>
       </div>
-      <div id="chart" class="chart" role="img" aria-label="Signal chart"></div>
-      <div class="legend" id="legend"></div>
-      <div class="table-wrap"><table id="kpiTable"></table></div>
+
+      <aside class="run-card" data-i18n-aria="runH">
+        <h2 data-i18n="runH">Agent run</h2>
+        <div class="runbar">
+          <button class="btn" id="btnReplay" type="button"><span data-i18n="replay">&#9654; Replay recorded run</span><small data-i18n="replaySub">free &middot; instant</small></button>
+          <button class="btn primary" id="btnLive" type="button"><span data-i18n="live">&#9889; Run live</span><small id="liveNote"></small></button>
+          <button class="btn ghost" id="btnSkip" type="button" hidden data-i18n="skipRun">Skip to result</button>
+          <input class="code" id="code" type="password" data-i18n-ph="code" autocomplete="off" hidden>
+        </div>
+        <div id="notice"></div>
+        <ol class="pipe" id="pipe" data-i18n-aria="pipeAria">
+          <li data-step="1" data-state="idle" tabindex="0" data-i18n-tip="pDetectTip"><span class="node"></span><div><b data-i18n="pDetect">Detect</b><small data-i18n="pDetectSub"></small></div><em></em></li>
+          <li data-step="2" data-state="idle" tabindex="0" data-i18n-tip="pDiagTip"><span class="node"></span><div><b data-i18n="pDiag">Diagnose</b><small data-i18n="pDiagSub"></small></div><em></em></li>
+          <li data-step="3" data-state="idle" tabindex="0" data-i18n-tip="pReportTip"><span class="node"></span><div><b data-i18n="pReport">Report</b><small data-i18n="pReportSub"></small></div><em></em></li>
+          <li data-step="4" data-state="idle" tabindex="0" data-i18n-tip="pApproveTip"><span class="node"></span><div><b data-i18n="pApprove">Approve</b><small data-i18n="pApproveSub"></small></div><em></em></li>
+        </ol>
+        <div class="now" id="now"><i class="spin" hidden></i><span id="nowText"></span></div>
+        <div class="meter" id="meter">
+          <div class="m" data-i18n-tip="mTimeTip"><span id="mTime">0.0</span><small data-i18n="mTime">seconds</small></div>
+          <div class="m" data-i18n-tip="mToolsTip"><span id="mTools">0</span><small data-i18n="mTools">tools</small></div>
+          <div class="m" data-i18n-tip="mCallsTip"><span id="mCalls">&ndash;</span><small data-i18n="mCalls">calls</small></div>
+          <div class="m" data-i18n-tip="mTokensTip"><span id="mTokens">&ndash;</span><small data-i18n="mTokens">tokens</small></div>
+          <div class="m" data-i18n-tip="mCostTip"><span id="mCost">&ndash;</span><small data-i18n="mCost">cost</small></div>
+        </div>
+      </aside>
+
+      <div class="below-card">
+        <div class="sub-h"><span data-i18n="findH">Detector findings</span> <span class="hint" data-i18n="findHint">click to inspect</span></div>
+        <div id="findings" class="chips" aria-live="polite"></div>
+        <div class="mpanel" id="mpanel" hidden></div>
+        <a class="btn ghost jump" id="jumpReport" href="#agents" hidden data-i18n="viewTrace">View trace and report &darr;</a>
+      </div>
     </section>
 
     <section class="card" id="agents">
-      <h2>3 &middot; Agent investigation</h2>
-      <div class="runbar">
-        <button class="btn" id="btnReplay" type="button">&#9654; Replay recorded run<small>free &middot; instant</small></button>
-        <button class="btn primary" id="btnLive" type="button">&#9889; Run live<small id="liveNote">real model call</small></button>
-        <input class="code" id="code" type="password" placeholder="access code" autocomplete="off" hidden>
-      </div>
-      <div id="notice"></div>
+      <h2 data-i18n="traceH">Investigation trace</h2>
       <div id="runMeta" class="meta"></div>
       <div id="timeline" class="timeline" aria-live="polite"></div>
       <div id="report" class="report" hidden></div>
       <div id="orders" class="orders"></div>
+      <p class="empty" id="traceEmpty" data-i18n="traceEmpty"></p>
+    </section>
+
+    <section class="card" id="data">
+      <h2><span data-i18n="dataH">Line data</span> <span class="tag" data-i18n="dataTag">live computation &middot; no LLM</span></h2>
+      <div class="controls">
+        <label><span data-i18n="machine">Machine</span> <select id="machineSel" data-i18n-aria="machine"></select></label>
+        <label><span data-i18n="signal">Signal</span> <select id="signalSel" data-i18n-aria="signal"></select></label>
+      </div>
+      <div id="chart" class="chart" role="img" data-i18n-aria="chartAria"></div>
+      <div class="legend" id="legend"></div>
+      <div class="table-wrap"><table id="kpiTable"></table></div>
     </section>
 
     <section class="card how" id="how">
-      <h2>How it works</h2>
-      <svg viewBox="0 0 900 310" role="img" aria-label="Architecture diagram">
+      <h2 data-i18n="howH">How it works</h2>
+      <svg viewBox="0 0 900 310" role="img" data-i18n-aria="howAria">
         <defs>
           <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
             <path d="M0 0L10 5L0 10z" fill="currentColor" style="fill:var(--muted)"/>
           </marker>
         </defs>
         <rect class="box" x="10" y="16" width="170" height="52" rx="9"/>
-        <text x="95" y="38" text-anchor="middle">Line simulator</text>
-        <text class="sub" x="95" y="55" text-anchor="middle">4 machines &middot; faults &middot; OPC UA</text>
+        <text x="95" y="38" text-anchor="middle" data-i18n="hSim">Line simulator</text>
+        <text class="sub" x="95" y="55" text-anchor="middle" data-i18n="hSimSub"></text>
         <rect class="box" x="210" y="16" width="170" height="52" rx="9"/>
-        <text x="295" y="38" text-anchor="middle">dbt models</text>
-        <text class="sub" x="295" y="55" text-anchor="middle">state runs &middot; KPI marts</text>
+        <text x="295" y="38" text-anchor="middle" data-i18n="hDbt">dbt models</text>
+        <text class="sub" x="295" y="55" text-anchor="middle" data-i18n="hDbtSub"></text>
         <rect class="box" x="410" y="16" width="150" height="52" rx="9"/>
-        <text x="485" y="38" text-anchor="middle">DuckDB</text>
-        <text class="sub" x="485" y="55" text-anchor="middle">read-only</text>
+        <text x="485" y="38" text-anchor="middle" data-i18n="hDuck">DuckDB</text>
+        <text class="sub" x="485" y="55" text-anchor="middle" data-i18n="hDuckSub"></text>
         <rect class="box" x="590" y="16" width="150" height="52" rx="9"/>
-        <text x="665" y="38" text-anchor="middle">Maintenance manuals</text>
-        <text class="sub" x="665" y="55" text-anchor="middle">BM25 search</text>
+        <text x="665" y="38" text-anchor="middle" data-i18n="hMan">Maintenance manuals</text>
+        <text class="sub" x="665" y="55" text-anchor="middle" data-i18n="hManSub"></text>
         <path class="arrow" d="M180 42H208"/>
         <path class="arrow" d="M380 42H408"/>
 
         <rect class="box ai" x="10" y="108" width="730" height="100" rx="12"/>
-        <text class="sub" x="24" y="126">Google ADK &middot; SequentialAgent &middot; state passed between agents</text>
+        <text class="sub" x="24" y="126" data-i18n="hAdk"></text>
         <rect class="box" x="26" y="140" width="200" height="50" rx="9"/>
-        <text x="126" y="161" text-anchor="middle">Detection agent</text>
+        <text x="126" y="161" text-anchor="middle" data-i18n="hDet">Detection agent</text>
         <text class="sub" x="126" y="177" text-anchor="middle">scan_line &middot; get_signal_trend</text>
         <rect class="box" x="266" y="140" width="200" height="50" rx="9"/>
-        <text x="366" y="161" text-anchor="middle">Diagnosis agent</text>
+        <text x="366" y="161" text-anchor="middle" data-i18n="hDiag">Diagnosis agent</text>
         <text class="sub" x="366" y="177" text-anchor="middle">search_manuals &middot; get_machine_kpis</text>
         <rect class="box" x="506" y="140" width="214" height="50" rx="9"/>
-        <text x="613" y="161" text-anchor="middle">Report agent</text>
+        <text x="613" y="161" text-anchor="middle" data-i18n="hRep">Report agent</text>
         <text class="sub" x="613" y="177" text-anchor="middle">report &middot; propose_work_order</text>
         <path class="arrow" d="M226 165H264"/>
         <path class="arrow" d="M466 165H504"/>
         <path class="arrow" d="M485 68V106"/>
-        <text class="sub" x="494" y="92">SQL &middot; stats &middot; IsolationForest</text>
+        <text class="sub" x="494" y="92" data-i18n="hSql"></text>
         <path class="arrow" d="M665 68V106"/>
 
         <rect class="box" x="765" y="128" width="125" height="58" rx="9"/>
-        <text x="827" y="152" text-anchor="middle">LLM</text>
-        <text class="sub" x="827" y="168" text-anchor="middle">Gemini or Azure</text>
+        <text x="827" y="152" text-anchor="middle" data-i18n="hLlm">LLM</text>
+        <text class="sub" x="827" y="168" text-anchor="middle" data-i18n="hLlmSub"></text>
         <text class="sub" x="827" y="180" text-anchor="middle">Foundry</text>
         <path class="arrow" d="M740 157H763"/>
 
         <rect class="box" x="10" y="244" width="340" height="52" rx="9"/>
-        <text x="180" y="266" text-anchor="middle">FastAPI + server-sent events</text>
-        <text class="sub" x="180" y="282" text-anchor="middle">Azure Container Apps &middot; scales to zero</text>
+        <text x="180" y="266" text-anchor="middle" data-i18n="hApi">FastAPI + server-sent events</text>
+        <text class="sub" x="180" y="282" text-anchor="middle" data-i18n="hApiSub"></text>
         <rect class="box" x="410" y="244" width="250" height="52" rx="9"/>
-        <text x="535" y="266" text-anchor="middle">Browser</text>
-        <text class="sub" x="535" y="282" text-anchor="middle">live trace &middot; human approval</text>
+        <text x="535" y="266" text-anchor="middle" data-i18n="hBrowser">Browser</text>
+        <text class="sub" x="535" y="282" text-anchor="middle" data-i18n="hBrowserSub"></text>
         <path class="arrow" d="M120 208V242"/>
         <path class="arrow" d="M350 270H408"/>
       </svg>
       <ul>
-        <li><strong>Deterministic first.</strong> Statistics, alarm limits and an Isolation Forest find the anomalies. The agents call these as tools, so numbers are reproducible and the model only has to reason and write.</li>
-        <li><strong>Cost-aware by design.</strong> Agents pass short summaries to each other, tools return compact JSON, every run has token, step and time limits, and recorded runs replay for free.</li>
-        <li><strong>Human in the loop.</strong> Work orders are only proposals until a person approves them. Nothing here talks to a real maintenance system.</li>
-        <li><strong>Grounded.</strong> Root-cause claims must cite the maintenance manuals (for example <span class="cite">MNT-101 &sect;3</span>). Those manuals are fictional example documents.</li>
+        <li data-i18n-html="how1"></li>
+        <li data-i18n-html="how2"></li>
+        <li data-i18n-html="how3"></li>
+        <li data-i18n-html="how4"></li>
       </ul>
     </section>
   </main>
 
   <footer>
-    <p>Demo with synthetic data. The agents can make mistakes; the detector's numbers come from code, the explanations from a language model. Live runs are limited per visitor and per day to keep the hosting cost low.</p>
+    <p data-i18n="footer"></p>
   </footer>
 
+  <div class="gtip" id="gtip" role="tooltip" hidden></div>
+  <button class="exit-present" id="btnExit" type="button" hidden data-i18n="exit">Exit presentation</button>
+  <script src="/static/i18n.js" defer></script>
   <script src="/static/app.js" defer></script>
 </body>
 </html>
