@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Deploy (or update) Plant Ops Copilot on Azure Container Apps with minimal cost:
-#   * Consumption plan, scale to zero (min replicas 0), at most one replica
+#   * Standard (workload profiles) environment, consumption compute, scale to zero (min replicas 0), at most one replica
 #   * Image pulled from GitHub Container Registry (no paid Azure Container Registry)
 #   * Log storage disabled (no Log Analytics workspace cost)
 # Requirements: Azure CLI logged in (az login) and these variables (shell or .env):
@@ -48,7 +48,7 @@ az group create -n "$RG" -l "$LOCATION" --only-show-errors -o none
 
 if ! az containerapp env show -n "$ENV_NAME" -g "$RG" -o none 2>/dev/null; then
   echo "== Container Apps environment $ENV_NAME (no log storage)"
-  az containerapp env create -n "$ENV_NAME" -g "$RG" -l "$LOCATION" --logs-destination none --only-show-errors -o none
+  az containerapp env create -n "$ENV_NAME" -g "$RG" -l "$LOCATION" --environment-mode WorkloadProfiles --logs-destination none --only-show-errors -o none
 fi
 
 if az containerapp show -n "$APP" -g "$RG" -o none 2>/dev/null; then
