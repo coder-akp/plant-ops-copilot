@@ -71,13 +71,13 @@ Package settings → Change visibility → **Public**. Otherwise Azure cannot pu
 
 ### 5. Deploy on Azure (about 10 minutes) [MANUAL]
 Requires the Azure CLI. On Windows, run the `.sh` files in Git Bash, WSL or Azure Cloud Shell.
-Add `LOCATION=<region from preflight>` and `IMAGE=ghcr.io/<github-user, lower case>/plant-ops-copilot:latest` to `.env`, then run:
+Add `LOCATION=<region from preflight>` and `IMAGE=ghcr.io/<github-user, lower case>/plant-ops-copilot:sha-<commit>` to `.env`, then run:
 ```bash
 az login
 bash infra/deploy.sh
 ```
 The script prints the site URL. Add it to LinkedIn and the GitHub repository description. A custom domain requires a standard (workload profiles) environment; express environments do not support one.
-After pushing new code, wait for the Action to finish and run `bash infra/deploy.sh` again.
+After pushing new code, wait for the Action to finish, set `IMAGE` in `.env` to the new `sha-` tag from the package page and run `bash infra/deploy.sh` again. A new tag makes Azure start a new revision; the `latest` tag may not be pulled again.
 
 ### 6. Safeguards [MANUAL]
 - Azure portal → Cost Management → Budgets: add a budget (for example $10) with an email alert, if the subscription offers that menu.
